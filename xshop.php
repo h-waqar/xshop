@@ -701,17 +701,19 @@ add_action('wp_footer', function () {
     wp_die(); // stop before theme loads
 });
 
-require_once __DIR__ . '/classes/ui/ServerSelect.php';
 require_once __DIR__ . '/classes/Cubixsol_Woo_Order.php';
 require_once __DIR__ . '/classes/Debug_Meta_Helper.php';
 require_once __DIR__ . '/classes/OrderProcessor.php';
-include_once __DIR__ . '/classes/CLogger.php';
+require_once __DIR__ . '/classes/ui/ServerSelect.php';
+require_once __DIR__ . '/classes/ui/VoucherUI.php';
+include_once PLUGIN_DIR_PATH . 'classes/ui/Admin/WooOrderDebug.php';
 
 use classes\Cubixsol_Woo_Order;
 use classes\Debug_Meta_Helper;
 use classes\OrderProcessor;
-use classes\CLogger;
 use classes\ui\ServerSelect;
+use classes\ui\VoucherUI;
+use classes\ui\Admin\WooOrderDebug;
 
 
 
@@ -719,6 +721,7 @@ use classes\ui\ServerSelect;
 add_action('plugins_loaded', function () {
     new ServerSelect();
     Cubixsol_Woo_Order::instance();
-
-    new Debug_Meta_Helper();
+    VoucherUI::init();
+//    new Debug_Meta_Helper();
+    WooOrderDebug::init();
 });

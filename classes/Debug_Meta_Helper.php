@@ -20,7 +20,7 @@ class Debug_Meta_Helper
         add_action('woocommerce_after_checkout_form', [$this, 'debug_checkout_meta']);
 
         // Admin: single order screen
-        add_action('woocommerce_admin_order_data_after_order_details', [$this, 'debug_order_meta']);
+//        add_action('woocommerce_admin_order_data_after_order_details', [$this, 'debug_order_meta']);
 
 //        add_action('woocommerce_after_checkout_form', [$this, 'debug_order_payload_preview']);
 
