@@ -139,6 +139,8 @@ function cubixsol_product_setting_page()
     $html .= '</td>';
     $html .= '</tr>';
 
+
+
     $html .= '<tr>';
     $html .= '<th scope="row">';
     $html .= '<label for="client-secret">Client Secret</label>';
@@ -699,19 +701,24 @@ add_action('wp_footer', function () {
     wp_die(); // stop before theme loads
 });
 
-
-
-//require_once __DIR__ . '/classes/ui/ServerSelect.php';
+require_once __DIR__ . '/classes/ui/ServerSelect.php';
 require_once __DIR__ . '/classes/Cubixsol_Woo_Order.php';
 require_once __DIR__ . '/classes/Debug_Meta_Helper.php';
-//require_once __DIR__ . '/classes/OrderProcessor.php';
+require_once __DIR__ . '/classes/OrderProcessor.php';
+include_once __DIR__ . '/classes/CLogger.php';
 
 use classes\Cubixsol_Woo_Order;
 use classes\Debug_Meta_Helper;
+use classes\OrderProcessor;
+use classes\CLogger;
 use classes\ui\ServerSelect;
 
+
+
+
 add_action('plugins_loaded', function () {
-//    new ServerSelect();
+    new ServerSelect();
     Cubixsol_Woo_Order::instance();
+
     new Debug_Meta_Helper();
 });

@@ -36,7 +36,7 @@ class TopupHandler extends BaseHandler
             'email' => $order->get_billing_email(),
             'phone' => $order->get_billing_phone(),
         ];
-
+;
         return $payload;
     }
 

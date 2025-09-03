@@ -1,7 +1,5 @@
 <?php
 
-//  classes/Handlers/VoucherHandler.php:3
-
 namespace classes\Handlers;
 
 defined('ABSPATH') || exit;
@@ -12,21 +10,51 @@ use classes\BaseHandler;
 
 class VoucherHandler extends BaseHandler
 {
+    /**
+     * Build payload for placeOrder
+     */
     public function build_payload(array $base, $xshop_json, $item, $order, $variation_product): array
     {
+        $decoded = json_decode($xshop_json, true);
+
         return [
-            'type' => 'voucher',
-            'client_order_id' => $base['order_id'] . '-' . $base['item_id'],
-            'item' => [
-                'sku' => $base['sku'],
-                'qty' => $base['quantity'],
+            'jsonrpc' => '2.0',
+            'id'      => 'voucher_' . uniqid('', true),
+            'method'  => 'placeOrder',
+            'params'  => [
+                'items' => [[
+                    'sku'      => $base['sku'],
+                    'quantity' => $base['quantity'],
+                    'price'    => [
+                        'amount'   => $base['price'],
+                        'currency' => $decoded['currency'] ?? 'USD',
+                    ],
+                ]],
+                'customerId' => $order->get_billing_email(),
+                'iat'        => time(),
             ],
-            'meta' => $base['meta'],
         ];
     }
 
-    public function get_endpoint(): string
+    /**
+     * Build endpoint dynamically from product API path
+     */
+    public function get_endpoint($xshop_json = null, $sku = null): string
     {
-        return 'https://your-external-api.example.com/vouchers';
+        $decoded  = json_decode($xshop_json, true);
+        $apiPath  = $decoded['product']['apiPath'] ?? '';
+        $apiPath  = ltrim($apiPath, '/');
+
+        return "https://xshop-sandbox.codashop.com/v2/{$apiPath}";
+    }
+
+    /**
+     * Add required headers
+     */
+    public function get_headers(): array
+    {
+        return [
+            'Content-Type' => 'application/json',
+        ];
     }
 }

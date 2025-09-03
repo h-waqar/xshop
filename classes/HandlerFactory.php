@@ -6,9 +6,12 @@ namespace classes;
 
 defined('ABSPATH') || exit;
 
+include_once PLUGIN_DIR_PATH . 'classes/Handlers/TopupHandler.php';
+include_once PLUGIN_DIR_PATH . 'classes/Handlers/VoucherHandler.php';
+
+
 use classes\Handlers\TopupHandler;
 use classes\Handlers\VoucherHandler;
-use classes\Handlers\GenericHandler;
 
 class HandlerFactory
 {
@@ -24,6 +27,6 @@ class HandlerFactory
             return new VoucherHandler();
         }
 
-        return new GenericHandler();
+        return false;
     }
 }
