@@ -7,9 +7,11 @@ defined('ABSPATH') || exit;
 
 include_once PLUGIN_DIR_PATH . 'classes/HandlerFactory.php';
 include_once PLUGIN_DIR_PATH . 'classes/CLogger.php';
+include_once PLUGIN_DIR_PATH . 'classes/XshopApiClient.php';
 
 use classes\HandlerFactory;
 use classes\CLogger;
+use classes\XshopApiClient;
 use WC_Order;
 
 class OrderProcessor
@@ -24,7 +26,6 @@ class OrderProcessor
     public function process($order_id)
     {
         CLogger::startSession("order{$order_id}");
-        CLogger::log('Run process method', $order_id);
         CLogger::log('--- START PROCESS ---', ['order_id' => $order_id]);
 
         $order = wc_get_order($order_id);
@@ -36,10 +37,11 @@ class OrderProcessor
         foreach ($order->get_items() as $item_id => $item) {
             CLogger::log('--- ITEM START ---', $item_id);
 
-            $product_info = $item->get_meta('xshop_product', true);
-            $sku_data     = $item->get_meta('xshop_selected_sku', true);
-            $sku_prices   = $item->get_meta('xshop_skuPrices', true);
-            $xshop_json   = $item->get_meta('xshop_json', true);
+            $product_info   = $item->get_meta('xshop_product', true);
+            $sku_data       = $item->get_meta('xshop_selected_sku', true);
+            $sku_prices     = $item->get_meta('xshop_skuPrices', true);
+            $xshop_json_raw = $item->get_meta('xshop_json', true);
+            $xshop_json     = is_string($xshop_json_raw) ? json_decode($xshop_json_raw, true) : $xshop_json_raw;
 
             if (empty($product_info) || empty($sku_data)) {
                 CLogger::log('Missing product/sku meta - skipping item', [
@@ -47,28 +49,14 @@ class OrderProcessor
                     'product_info' => $product_info,
                     'sku_data'     => $sku_data,
                 ]);
-                CLogger::log('--- ITEM END (skipped) ---', $item_id);
                 continue;
-            }
-
-            CLogger::log('Product Info', $product_info);
-            CLogger::log('Selected SKU', $sku_data);
-
-            if (!empty($sku_prices)) {
-                update_post_meta($order_id, '_xshop_prices_' . $item_id, $sku_prices);
-                CLogger::log('Saved Prices Meta', [
-                    'meta_key' => '_xshop_prices_' . $item_id,
-                    'value'    => $sku_prices,
-                ]);
             }
 
             $handler = HandlerFactory::make($product_info['type'] ?? '', $product_info['subtype'] ?? '');
             if (!$handler) {
                 CLogger::log('Handler not found - skipping item', $product_info);
-                CLogger::log('--- ITEM END (no handler) ---', $item_id);
                 continue;
             }
-            CLogger::log('Handler Created', get_class($handler));
 
             try {
                 $base = [
@@ -80,109 +68,67 @@ class OrderProcessor
                     'product'   => $product_info,
                 ];
                 $payload = $handler->build_payload($base, $xshop_json, $item, $order, $item->get_product());
-                CLogger::log('Payload Built', $payload);
             } catch (\Throwable $e) {
                 CLogger::log('Payload Error', $e->getMessage());
-                CLogger::log('--- ITEM END (payload error) ---', $item_id);
                 continue;
             }
 
-            // --- Resolve endpoint ---
+            // Resolve endpoint
             $apiPath = $product_info['apiPath'] ?? null;
             if (empty($apiPath)) {
                 try {
                     $endpoint_full = $handler->get_endpoint($xshop_json, $sku_data['sku'] ?? null);
-                    $apiPath = ltrim(parse_url($endpoint_full, PHP_URL_PATH) ?: '', '/');
-                    CLogger::log('Endpoint (from handler)', $endpoint_full);
+                    $apiPath       = ltrim(parse_url($endpoint_full, PHP_URL_PATH) ?: '', '/');
                 } catch (\Throwable $e) {
                     CLogger::log('Endpoint Resolve Error', $e->getMessage());
-                    CLogger::log('--- ITEM END (no endpoint) ---', $item_id);
                     continue;
                 }
-            } else {
-                CLogger::log('apiPath resolved', $apiPath);
             }
 
-            // --- API Request ---
             try {
-                CLogger::log('Sending Request', [
-                    'apiPath' => $apiPath,
-                    'payload' => $payload,
-                ]);
+                $res = XshopApiClient::request($apiPath, $payload, 'POST');
 
-                $res = xshop_api_request_curl($apiPath, $payload, 'POST');
-
-                // Normalize response
-                $http_status = $res['status'] ?? ($res['response']['code'] ?? 0);
-                $raw_body    = $res['body'] ?? null;
-                $decoded     = $res['json'] ?? (json_decode($raw_body, true) ?: null);
-                $raw_url     = $res['url'] ?? null;
-                $sent_headers= $res['header'] ?? null;
-
-                // Full response logging
-                CLogger::log('HTTP Response', [
-                    'status'  => $http_status,
-                    'body'    => $raw_body,
-                    'decoded' => $decoded,
-                ]);
-
-                // Debug meta storage
                 $debug_data = [
-                    'endpoint'     => (defined('API_BASE_URL') ? rtrim(API_BASE_URL, '/') . '/' . ltrim($apiPath, '/') : $apiPath),
-                    'url'          => $raw_url,
-                    'sent_headers' => $sent_headers,
-                    'payload'      => $payload,
-                    'status'       => $http_status,
-                    'raw'          => $res,
-                    'body'         => $raw_body,
-                    'response'     => $decoded,
+                    'endpoint' => $res['url'],
+                    'payload'  => $payload,
+                    'status'   => $res['status'],
+                    'response' => $res['decoded'],
+                    'raw'      => $res,
                 ];
                 update_post_meta($order_id, '_xshop_debug_' . $item_id, $debug_data);
-                CLogger::log('Saved Debug Data', $debug_data);
 
+                if ($res['success'] && isset($res['decoded']['result'])) {
+                    $decoded = $res['decoded'];
+
+                    $external_order_id = $decoded['result']['orderId'] ?? ($decoded['result']['id'] ?? null);
+                    if ($external_order_id) {
+                        $existing            = get_post_meta($order_id, self::META_EXTERNAL_IDS, true) ?: [];
+                        $existing[$item_id]  = $external_order_id;
+                        update_post_meta($order_id, self::META_EXTERNAL_IDS, $existing);
+                    }
+
+                    $status_existing            = get_post_meta($order_id, self::META_EXTERNAL_STATUS, true) ?: [];
+                    $status_existing[$item_id]  = $decoded['result']['status'] ?? 'ok';
+                    update_post_meta($order_id, self::META_EXTERNAL_STATUS, $status_existing);
+
+                    if (!empty($decoded['result']['items'])) {
+                        $voucher_existing = get_post_meta($order_id, self::META_EXTERNAL_VOUCHERS, true) ?: [];
+                        foreach ($decoded['result']['items'] as $entry) {
+                            if (!empty($entry['codes'])) {
+                                $voucher_existing[$item_id][] = $entry['codes'];
+                            }
+                        }
+                        update_post_meta($order_id, self::META_EXTERNAL_VOUCHERS, $voucher_existing);
+                    }
+                } else {
+                    CLogger::log('API Response NOT successful', [
+                        'status'   => $res['status'],
+                        'response' => $res['decoded'],
+                    ]);
+                }
             } catch (\Throwable $e) {
                 CLogger::log('Request Exception', $e->getMessage());
-                CLogger::log('--- ITEM END (request exception) ---', $item_id);
                 continue;
-            }
-
-            // --- Handle success/failure ---
-            $is_success = false;
-            if (in_array((int) $http_status, [200, 201], true)) {
-                if (is_array($decoded) && isset($decoded['result'])) {
-                    $is_success = true;
-                }
-            }
-
-            if ($is_success) {
-                $external_order_id = $decoded['result']['orderId'] ?? ($decoded['result']['id'] ?? null);
-                if ($external_order_id) {
-                    $existing = get_post_meta($order_id, self::META_EXTERNAL_IDS, true) ?: [];
-                    $existing[$item_id] = $external_order_id;
-                    update_post_meta($order_id, self::META_EXTERNAL_IDS, $existing);
-                    CLogger::log('Saved external order id', $external_order_id);
-                }
-
-                $status_existing = get_post_meta($order_id, self::META_EXTERNAL_STATUS, true) ?: [];
-                $status_existing[$item_id] = $decoded['result']['status'] ?? 'ok';
-                update_post_meta($order_id, self::META_EXTERNAL_STATUS, $status_existing);
-
-                // ✅ Save voucher codes
-                if (!empty($decoded['result']['items'])) {
-                    $voucher_existing = get_post_meta($order_id, self::META_EXTERNAL_VOUCHERS, true) ?: [];
-                    foreach ($decoded['result']['items'] as $entry) {
-                        if (!empty($entry['codes'])) {
-                            $voucher_existing[$item_id][] = $entry['codes'];
-                        }
-                    }
-                    update_post_meta($order_id, self::META_EXTERNAL_VOUCHERS, $voucher_existing);
-                    CLogger::log('Saved voucher codes', $voucher_existing);
-                }
-            } else {
-                CLogger::log('API Response NOT successful', [
-                    'status'   => $http_status,
-                    'response' => $decoded,
-                ]);
             }
 
             CLogger::log('--- ITEM END ---', $item_id);
