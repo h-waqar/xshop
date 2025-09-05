@@ -708,12 +708,23 @@ require_once __DIR__ . '/classes/ui/ServerSelect.php';
 require_once __DIR__ . '/classes/ui/VoucherUI.php';
 include_once PLUGIN_DIR_PATH . 'classes/ui/Admin/WooOrderDebug.php';
 
+// Topup
+require_once __DIR__ . '/classes/ajax/TopupAjax.php';
+require_once __DIR__ . '/classes/ui/TopupUI.php';
+require_once __DIR__ . '/classes/Handlers/TopupHandler.php';
+
+// after your existing add_action('plugins_loaded', ...) or in that callback:
+
+
+
 use classes\Cubixsol_Woo_Order;
 use classes\Debug_Meta_Helper;
 use classes\OrderProcessor;
 use classes\ui\ServerSelect;
 use classes\ui\VoucherUI;
 use classes\ui\Admin\WooOrderDebug;
+use classes\ajax\TopupAjax;
+use classes\ui\TopupUI;
 
 
 
@@ -722,6 +733,10 @@ add_action('plugins_loaded', function () {
     new ServerSelect();
     Cubixsol_Woo_Order::instance();
     VoucherUI::init();
-//    new Debug_Meta_Helper();
+    new Debug_Meta_Helper();
     WooOrderDebug::init();
+
+    // Topup
+    TopupAjax::init();
+    TopupUI::init();
 });
