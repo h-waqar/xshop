@@ -6,8 +6,10 @@ namespace classes\Handlers;
 defined('ABSPATH') || exit;
 
 include_once PLUGIN_DIR_PATH . 'classes/BaseHandler.php';
+include_once PLUGIN_DIR_PATH . 'classes/CLogger.php';
 
 use classes\BaseHandler;
+use classes\CLogger;
 
 class TopupHandler extends BaseHandler
 {
@@ -16,22 +18,25 @@ class TopupHandler extends BaseHandler
         return 'topup';
     }
 
-    public function build_payload(array $base, array $xshop_json, $item, $order, $variation_product): array
+    public function build_payload(array $base, $xshop_json, $item, $order, $variation_product): array
     {
+        // normalize JSON
+        $decoded = $this->decode_json($xshop_json);
+
         // Default build_payload acts like validate
-        return $this->build_validate_payload($base, $xshop_json, $item->get_meta('xshop_userAccount', true));
+        return $this->build_validate_payload($base, $decoded, $item->get_meta('xshop_userAccount', true));
     }
 
-    public function build_validate_payload(array $base, array $xshop_json, $userAccount): array
+    public function build_validate_payload(array $base, $xshop_json, $userAccount): array
     {
         $decoded  = $this->decode_json($xshop_json);
         $currency = $base['sku_data']['currency'] ?? $decoded['product']['currency'] ?? 'USD';
 
         $item = [
-            'sku'        => $base['sku'] ?? null,
-            'description'=> $base['sku_data']['description'] ?? null,
-            'quantity'   => (int)($base['quantity'] ?? 1),
-            'price'      => [
+            'sku'         => $base['sku'] ?? null,
+            'description' => $base['sku_data']['description'] ?? null,
+            'quantity'    => (int)($base['quantity'] ?? 1),
+            'price'       => [
                 'amount'   => (float)($base['price'] ?? 0.0),
                 'currency' => $currency,
             ],
@@ -42,35 +47,35 @@ class TopupHandler extends BaseHandler
             'id'      => 'validate_' . uniqid('', true),
             'method'  => 'validate',
             'params'  => [
-                'items'      => [$item],
-                'userAccount'=> $userAccount,
-                'customerId' => $base['customerId'] ?? '',
-                'iat'        => time(),
+                'items'       => [$item],
+                'userAccount' => $userAccount,
+                'customerId'  => $base['customerId'] ?? '',
+                'iat'         => time(),
             ],
         ];
     }
 
-    public function build_topup_payload(array $base, array $xshop_json, $userAccount, string $orderId, bool $usingValidateIdForTopup = false): array
+    public function build_topup_payload(array $base, $xshop_json, $userAccount, string $orderId, bool $usingValidateIdForTopup = false): array
     {
         $decoded  = $this->decode_json($xshop_json);
         $currency = $base['sku_data']['currency'] ?? $decoded['product']['currency'] ?? 'USD';
 
         $item = [
-            'sku'        => $base['sku'] ?? null,
-            'description'=> $base['sku_data']['description'] ?? null,
-            'quantity'   => (int)($base['quantity'] ?? 1),
-            'price'      => [
+            'sku'         => $base['sku'] ?? null,
+            'description' => $base['sku_data']['description'] ?? null,
+            'quantity'    => (int)($base['quantity'] ?? 1),
+            'price'       => [
                 'amount'   => (float)($base['price'] ?? 0.0),
                 'currency' => $currency,
             ],
         ];
 
         $params = [
-            'items'      => [$item],
-            'userAccount'=> $userAccount,
-            'orderId'    => $orderId,
-            'customerId' => $base['customerId'] ?? '',
-            'iat'        => time(),
+            'items'       => [$item],
+            'userAccount' => $userAccount,
+            'orderId'     => $orderId,
+            'customerId'  => $base['customerId'] ?? '',
+            'iat'         => time(),
         ];
 
         $payload = [
@@ -91,8 +96,11 @@ class TopupHandler extends BaseHandler
 
     public function get_endpoint($xshop_json = null, $sku = null): string
     {
-        $decoded  = $this->decode_json($xshop_json);
-        $apiPath  = ltrim($decoded['product']['apiPath'] ?? '', '/');
+        $decoded = $this->decode_json($xshop_json);
+        $apiPath = ltrim($decoded['product']['apiPath'] ?? '', '/');
+
+        CLogger::log('-- Topup endpoint --: ' . $apiPath);
+
         return "https://xshop-sandbox.codashop.com/v2/{$apiPath}";
     }
 }

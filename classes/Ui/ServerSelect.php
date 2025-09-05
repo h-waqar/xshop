@@ -2,7 +2,7 @@
 
 namespace classes\ui;
 
-//classes/ui/ServerSelect.php:5
+//classes/Ui/ServerSelect.php:5
 
 class ServerSelect
 {

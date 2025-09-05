@@ -1,5 +1,5 @@
 <?php
-// classes/ajax/TopupAjax.php
+// classes/Ajax/TopupAjax.php
 
 namespace classes\ajax;
 

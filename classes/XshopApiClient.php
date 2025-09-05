@@ -26,7 +26,13 @@ class XshopApiClient
             ? rtrim(API_BASE_URL, '/') . '/' . ltrim($apiPath, '/')
             : "https://xshop-sandbox.codashop.com/v2/" . ltrim($apiPath, '/');
 
+        // Prevent double v2
+        $url = str_replace('/v2/v2/', '/v2/', $url);
+
         try {
+
+
+
             CLogger::log("XShop API → {$url}", $payload);
 
             // Call existing curl wrapper

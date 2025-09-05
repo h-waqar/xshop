@@ -1,5 +1,5 @@
 <?php
-// classes/ui/Admin/WooOrderDebug.php
+// classes/Ui/Admin/WooOrderDebug.php
 
 namespace classes\ui\Admin;
 

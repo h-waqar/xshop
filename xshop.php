@@ -75,6 +75,7 @@ function enqueue_front_scripts()
 {
     wp_enqueue_style('xshop', plugins_url('/assets/css/xshop.css', PLUGIN_FILE), [], VERSION);
     wp_enqueue_script('xshop', plugins_url('/assets/js/xshop.js', PLUGIN_FILE), ['jquery'], VERSION);
+    wp_localize_script('xshop', 'xshopValidateConfig', ['ajax_url' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('xshop-validate'), 'checkout_url' => wc_get_checkout_url(),]);
 }
 
 
@@ -83,24 +84,24 @@ function enqueue_front_scripts()
  *
  * @param string $version Plugin version.
  */
-function cubixsol_define_constants( $version ) {
+function cubixsol_define_constants($version)
+{
     $plugin_file = __FILE__;
-    $plugin_dir  = plugin_dir_path( $plugin_file );
-    $plugin_url  = plugin_dir_url( $plugin_file );
+    $plugin_dir = plugin_dir_path($plugin_file);
+    $plugin_url = plugin_dir_url($plugin_file);
 
     // Keep your existing constants
-    define( 'API_BASE_URL', 'https://xshop-sandbox.codashop.com/v2' );
+    define('API_BASE_URL', 'https://xshop-sandbox.codashop.com/v2');
     // define( 'API_BASE_URL', 'https://xshop.codashop.com/v2' ); // Production
-    define( 'PLUGIN_FILE', $plugin_file );
-    define( 'VERSION', $version );
+    define('PLUGIN_FILE', $plugin_file);
+    define('VERSION', $version);
 
     // Add extra useful constants
-    define( 'PLUGIN_BASENAME', plugin_basename( $plugin_file ) );
-    define( 'PLUGIN_DIR_PATH', $plugin_dir );
-    define( 'PLUGIN_DIR_URL', $plugin_url );
-    define( 'PLUGIN_ASSETS_URL', trailingslashit( $plugin_url . 'assets' ) );
+    define('PLUGIN_BASENAME', plugin_basename($plugin_file));
+    define('PLUGIN_DIR_PATH', $plugin_dir);
+    define('PLUGIN_DIR_URL', $plugin_url);
+    define('PLUGIN_ASSETS_URL', trailingslashit($plugin_url . 'assets'));
 }
-
 
 
 function cubixsol_admin_menu_page()
@@ -138,7 +139,6 @@ function cubixsol_product_setting_page()
     $html .= '<input name="xshop_client_id" type="text" id="xshop_client_id" value="' . get_option("xshop_client_id") . '" class="regular-text" />';
     $html .= '</td>';
     $html .= '</tr>';
-
 
 
     $html .= '<tr>';
@@ -364,7 +364,7 @@ function xshop_sync_product()
         foreach ($skus as $sku) {
             $sku_data[] = [
 
-                    'sku' => $sku['sku'] ?? '', 'description' => $sku['description'] ?? '', 'price' => $sku['price']['amount'] ?? '', 'currency' => $sku['price']['currency'] ?? '', 'originalPrice' => $sku['originalPrice']['amount'] ?? '', 'originalCurrency' => $sku['originalPrice']['currency'] ?? '', 'retailPrice' => $sku['retailPrice']['amount'] ?? '', 'retailCurrency' => $sku['retailPrice']['currency'] ?? '', 'countryCode' => $sku['countryCode'] ?? '', 'origin' => $sku['origin'] ?? '',];
+                'sku' => $sku['sku'] ?? '', 'description' => $sku['description'] ?? '', 'price' => $sku['price']['amount'] ?? '', 'currency' => $sku['price']['currency'] ?? '', 'originalPrice' => $sku['originalPrice']['amount'] ?? '', 'originalCurrency' => $sku['originalPrice']['currency'] ?? '', 'retailPrice' => $sku['retailPrice']['amount'] ?? '', 'retailCurrency' => $sku['retailPrice']['currency'] ?? '', 'countryCode' => $sku['countryCode'] ?? '', 'origin' => $sku['origin'] ?? '',];
 
             $origin = $sku['origin'];
             $countryCode = $sku['countryCode'];
@@ -387,7 +387,7 @@ function xshop_sync_product()
         if ($haveVerify) {
             $listSkuPrice_body = ["jsonrpc" => "2.0", "id" => uniqid(), "method" => "listSkuPrice", "params" => ["iat" => time(), "countryOfOrigin" => "br"]];
 
-            $listSkuPrice_endpoint = ltrim($apiPath,'/');
+            $listSkuPrice_endpoint = ltrim($apiPath, '/');
             $listSkuPrice_res = xshop_api_request_curl($listSkuPrice_endpoint, $listSkuPrice_body, 'POST');
 
             $listSkuPrices = $listSkuPrice_res['json']['result']['skuList'] ?? [];
@@ -421,7 +421,7 @@ function xshop_sync_product()
         // create/update propert
 
 //        if ($name == 'Steam Voucher')
-            cubixsol_update_product($post_id, $current_product_data);
+        cubixsol_update_product($post_id, $current_product_data);
 
     }
 }
@@ -675,7 +675,6 @@ function test()
 }
 
 
-
 add_action('wp_footer', function () {
     if (!isset($_GET['debug'])) {
         return;
@@ -701,42 +700,39 @@ add_action('wp_footer', function () {
     wp_die(); // stop before theme loads
 });
 
-require_once __DIR__ . '/classes/Cubixsol_Woo_Order.php';
-require_once __DIR__ . '/classes/Debug_Meta_Helper.php';
-require_once __DIR__ . '/classes/OrderProcessor.php';
-require_once __DIR__ . '/classes/ui/ServerSelect.php';
-require_once __DIR__ . '/classes/ui/VoucherUI.php';
-include_once PLUGIN_DIR_PATH . 'classes/ui/Admin/WooOrderDebug.php';
+require_once PLUGIN_DIR_PATH . '/classes/Cubixsol_Woo_Order.php';
+require_once PLUGIN_DIR_PATH . '/classes/Debug_Meta_Helper.php';
+require_once PLUGIN_DIR_PATH . '/classes/OrderProcessor.php';
+require_once PLUGIN_DIR_PATH . '/classes/Ui/ServerSelect.php';
+require_once PLUGIN_DIR_PATH . '/classes/Ui/VoucherUI.php';
+include_once PLUGIN_DIR_PATH . 'classes/Ui/Admin/WooOrderDebug.php';
 
 // Topup
-require_once __DIR__ . '/classes/ajax/TopupAjax.php';
-require_once __DIR__ . '/classes/ui/TopupUI.php';
-require_once __DIR__ . '/classes/Handlers/TopupHandler.php';
-
-// after your existing add_action('plugins_loaded', ...) or in that callback:
-
+require_once PLUGIN_DIR_PATH . '/classes/Ajax/TopupAjax.php';
+require_once PLUGIN_DIR_PATH . '/classes/Ui/TopupUI.php';
+require_once PLUGIN_DIR_PATH . '/classes/Handlers/TopupHandler.php';
+include_once PLUGIN_DIR_PATH . 'classes/Ui/ProductButton.php';
 
 
+use classes\ajax\TopupAjax;
 use classes\Cubixsol_Woo_Order;
 use classes\Debug_Meta_Helper;
-use classes\OrderProcessor;
-use classes\ui\ServerSelect;
-use classes\ui\VoucherUI;
 use classes\ui\Admin\WooOrderDebug;
-use classes\ajax\TopupAjax;
+use classes\ui\ProductButton;
+use classes\ui\ServerSelect;
 use classes\ui\TopupUI;
-
-
+use classes\ui\VoucherUI;
 
 
 add_action('plugins_loaded', function () {
     new ServerSelect();
     Cubixsol_Woo_Order::instance();
     VoucherUI::init();
-    new Debug_Meta_Helper();
+//    new Debug_Meta_Helper();
     WooOrderDebug::init();
 
     // Topup
     TopupAjax::init();
     TopupUI::init();
+    ProductButton::init();
 });
