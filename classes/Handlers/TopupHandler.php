@@ -27,11 +27,45 @@ class TopupHandler extends BaseHandler
         return $this->build_validate_payload($base, $decoded, $item->get_meta('xshop_userAccount', true));
     }
 
+//    public function build_validate_payload(array $base, $xshop_json, $userAccount): array
+//    {
+//        $decoded  = $this->decode_json($xshop_json);
+//        $currency = $base['sku_data']['currency'] ?? $decoded['product']['currency'] ?? 'USD';
+//        $subtype = $decoded['product']['subtype'] ?? null;
+//
+//        CLogger::log('-- This is the subtype --', $subtype);
+//
+//        $item = [
+//            'sku'         => $base['sku'] ?? null,
+//            'description' => $base['sku_data']['description'] ?? null,
+//            'quantity'    => (int)($base['quantity'] ?? 1),
+//            'price'       => [
+//                'amount'   => (float)($base['price'] ?? 0.0),
+//                'currency' => $currency,
+//            ],
+//        ];
+//
+//        return [
+//            'jsonrpc' => '2.0',
+//            'id'      => 'validate_' . uniqid('', true),
+//            'method'  => 'validate',
+//            'params'  => [
+//                'items'       => [$item],
+//                'userAccount' => $userAccount,
+//                'customerId'  => $base['customerId'] ?? '',
+//                'iat'         => time(),
+//            ],
+//        ];
+//    }
+
+
     public function build_validate_payload(array $base, $xshop_json, $userAccount): array
     {
         $decoded  = $this->decode_json($xshop_json);
         $currency = $base['sku_data']['currency'] ?? $decoded['product']['currency'] ?? 'USD';
+        $subtype  = $decoded['product']['subtype'] ?? null;
 
+        // Build the common item
         $item = [
             'sku'         => $base['sku'] ?? null,
             'description' => $base['sku_data']['description'] ?? null,
@@ -42,18 +76,52 @@ class TopupHandler extends BaseHandler
             ],
         ];
 
+        // Build userAccount dynamically based on subtype
+        switch ((string)$subtype) {
+            case '1':
+                // simple userId only (string)
+                $ua = is_string($userAccount) ? $userAccount : ($userAccount['userId'] ?? '');
+                break;
+
+            case '2':
+                // requires userId + server {id, name}
+                $ua = [
+                    'userId' => $userAccount['userId'] ?? '',
+                    'server' => [
+                        'id'   => $userAccount['server']['id'] ?? '',
+                        'name' => $userAccount['server']['name'] ?? '',
+                    ],
+                ];
+                break;
+
+            case '3':
+                // requires userId + zoneId
+                $ua = [
+                    'userId' => $userAccount['userId'] ?? '',
+                    'zoneId' => $userAccount['zoneId'] ?? '',
+                ];
+                break;
+
+            default:
+                // fallback (treat like subtype 1)
+                $ua = is_string($userAccount) ? $userAccount : ($userAccount['userId'] ?? '');
+                break;
+        }
+
         return [
             'jsonrpc' => '2.0',
             'id'      => 'validate_' . uniqid('', true),
             'method'  => 'validate',
             'params'  => [
                 'items'       => [$item],
-                'userAccount' => $userAccount,
+                'userAccount' => $ua,
                 'customerId'  => $base['customerId'] ?? '',
                 'iat'         => time(),
             ],
         ];
     }
+
+
 
     public function build_topup_payload(array $base, $xshop_json, $userAccount, string $orderId, bool $usingValidateIdForTopup = false): array
     {
