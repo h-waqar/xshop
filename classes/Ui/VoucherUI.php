@@ -1,5 +1,5 @@
 <?php
-// classes/ui/VoucherUI.php
+// classes/Ui/VoucherUI.php
 namespace classes\ui;
 
 defined('ABSPATH') || exit;

@@ -1,4 +1,5 @@
 <?php
+// classes/Handlers/VoucherHandler.php
 
 namespace classes\Handlers;
 
@@ -10,12 +11,14 @@ use classes\BaseHandler;
 
 class VoucherHandler extends BaseHandler
 {
-    /**
-     * Build payload for placeOrder
-     */
-    public function build_payload(array $base, $xshop_json, $item, $order, $variation_product): array
+    public function get_type(): string
     {
-        $decoded = json_decode($xshop_json, true);
+        return 'voucher';
+    }
+
+    public function build_payload(array $base, array $xshop_json, $item, $order, $variation_product): array
+    {
+        $decoded = $this->decode_json($xshop_json);
 
         return [
             'jsonrpc' => '2.0',
@@ -36,25 +39,11 @@ class VoucherHandler extends BaseHandler
         ];
     }
 
-    /**
-     * Build endpoint dynamically from product API path
-     */
     public function get_endpoint($xshop_json = null, $sku = null): string
     {
-        $decoded  = json_decode($xshop_json, true);
-        $apiPath  = $decoded['product']['apiPath'] ?? '';
-        $apiPath  = ltrim($apiPath, '/');
+        $decoded = $this->decode_json($xshop_json);
+        $apiPath = ltrim($decoded['product']['apiPath'] ?? '', '/');
 
         return "https://xshop-sandbox.codashop.com/v2/{$apiPath}";
-    }
-
-    /**
-     * Add required headers
-     */
-    public function get_headers(): array
-    {
-        return [
-            'Content-Type' => 'application/json',
-        ];
     }
 }

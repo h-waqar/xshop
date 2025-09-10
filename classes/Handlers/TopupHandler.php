@@ -1,62 +1,106 @@
 <?php
-
-//  classes/Handlers/TopupHandler.php:3
+// classes/Handlers/TopupHandler.php
 
 namespace classes\Handlers;
 
 defined('ABSPATH') || exit;
 
 include_once PLUGIN_DIR_PATH . 'classes/BaseHandler.php';
+include_once PLUGIN_DIR_PATH . 'classes/CLogger.php';
 
 use classes\BaseHandler;
+use classes\CLogger;
 
 class TopupHandler extends BaseHandler
 {
+    public function get_type(): string
+    {
+        return 'topup';
+    }
+
     public function build_payload(array $base, $xshop_json, $item, $order, $variation_product): array
     {
-        $sku_object = $this->find_sku_in_json($base['sku'], $xshop_json);
+        // normalize JSON
+        $decoded = $this->decode_json($xshop_json);
+
+        // Default build_payload acts like validate
+        return $this->build_validate_payload($base, $decoded, $item->get_meta('xshop_userAccount', true));
+    }
+
+    public function build_validate_payload(array $base, $xshop_json, $userAccount): array
+    {
+        $decoded  = $this->decode_json($xshop_json);
+        $currency = $base['sku_data']['currency'] ?? $decoded['product']['currency'] ?? 'USD';
+
+        $item = [
+            'sku'         => $base['sku'] ?? null,
+            'description' => $base['sku_data']['description'] ?? null,
+            'quantity'    => (int)($base['quantity'] ?? 1),
+            'price'       => [
+                'amount'   => (float)($base['price'] ?? 0.0),
+                'currency' => $currency,
+            ],
+        ];
+
+        return [
+            'jsonrpc' => '2.0',
+            'id'      => 'validate_' . uniqid('', true),
+            'method'  => 'validate',
+            'params'  => [
+                'items'       => [$item],
+                'userAccount' => $userAccount,
+                'customerId'  => $base['customerId'] ?? '',
+                'iat'         => time(),
+            ],
+        ];
+    }
+
+    public function build_topup_payload(array $base, $xshop_json, $userAccount, string $orderId, bool $usingValidateIdForTopup = false): array
+    {
+        $decoded  = $this->decode_json($xshop_json);
+        $currency = $base['sku_data']['currency'] ?? $decoded['product']['currency'] ?? 'USD';
+
+        $item = [
+            'sku'         => $base['sku'] ?? null,
+            'description' => $base['sku_data']['description'] ?? null,
+            'quantity'    => (int)($base['quantity'] ?? 1),
+            'price'       => [
+                'amount'   => (float)($base['price'] ?? 0.0),
+                'currency' => $currency,
+            ],
+        ];
+
+        $params = [
+            'items'       => [$item],
+            'userAccount' => $userAccount,
+            'orderId'     => $orderId,
+            'customerId'  => $base['customerId'] ?? '',
+            'iat'         => time(),
+        ];
 
         $payload = [
-            'type' => 'topup',
-            'client_order_id' => $base['order_id'],
-            'item' => [
-                'sku' => $base['sku'],
-                'quantity' => $base['quantity'],
-                'price' => $base['price'],
-                'description' => $item->get_name(),
-            ],
-            'meta' => $base['meta'],
+            'jsonrpc' => '2.0',
+            'id'      => $usingValidateIdForTopup
+                ? ($base['validate_id'] ?? 'topup_' . uniqid('', true))
+                : ('topup_' . uniqid('', true)),
+            'method'  => 'topup',
+            'params'  => $params,
         ];
 
-        if ($sku_object) {
-            $payload['item']['vendor_sku_info'] = $sku_object;
+        if ($usingValidateIdForTopup) {
+            $payload['usingValidateIdForTopup'] = true;
         }
 
-        $payload['customer'] = [
-            'email' => $order->get_billing_email(),
-            'phone' => $order->get_billing_phone(),
-        ];
-;
         return $payload;
     }
 
-    public function get_endpoint(): string
+    public function get_endpoint($xshop_json = null, $sku = null): string
     {
-        return 'https://your-external-api.example.com/topups';
-    }
+        $decoded = $this->decode_json($xshop_json);
+        $apiPath = ltrim($decoded['product']['apiPath'] ?? '', '/');
 
-    private function find_sku_in_json($sku, $json)
-    {
-        $decoded = is_array($json) ? $json : json_decode($json, true);
-        $skus = $decoded['skus'] ?? ($decoded[0]['skus'] ?? null);
+        CLogger::log('-- Topup endpoint --: ' . $apiPath);
 
-        if (empty($skus) || !is_array($skus)) return null;
-
-        foreach ($skus as $s) {
-            if (($s['sku'] ?? null) === $sku) {
-                return $s;
-            }
-        }
-        return null;
+        return "https://xshop-sandbox.codashop.com/v2/{$apiPath}";
     }
 }
