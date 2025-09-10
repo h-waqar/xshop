@@ -74,7 +74,8 @@ function enqueue_admin_scripts()
 function enqueue_front_scripts()
 {
     wp_enqueue_style('xshop', plugins_url('/assets/css/xshop.css', PLUGIN_FILE), [], VERSION);
-    wp_enqueue_script('xshop', plugins_url('/assets/js/xshop.js', PLUGIN_FILE), ['jquery'], VERSION);
+//    wp_enqueue_script('xshop', plugins_url('/assets/js/xshop.js', PLUGIN_FILE), ['jquery'], VERSION);
+    wp_enqueue_script('xshop', plugins_url('/assets/js/xshop.js', PLUGIN_FILE), ['jquery'],  filemtime(plugin_dir_path(PLUGIN_FILE) . 'assets/js/xshop.js'), true);
     wp_localize_script('xshop', 'xshopValidateConfig', ['ajax_url' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('xshop-validate'), 'checkout_url' => wc_get_checkout_url(),]);
 }
 
@@ -229,6 +230,16 @@ function xshop_api_request_curl($endpoint, $body = null, $method = 'GET', $args 
         }
     }
 
+    // Build URL
+    if (preg_match('#^https?://#i', $endpoint)) {
+        // Already a full URL, trust it
+        $url = $endpoint;
+    } else {
+        $base = defined('API_BASE_URL') ? API_BASE_URL : 'https://xshop-sandbox.codashop.com/v2/';
+        $url  = rtrim($base, '/') . '/' . ltrim($endpoint, '/');
+    }
+
+
     $jwt = xshop_generate_jwt_from_json($json_body);
 
     if (!$jwt) {
@@ -377,8 +388,6 @@ function xshop_sync_product()
             $server_endpoint = ltrim($apiPath, '/');
             $server_res = xshop_api_request_curl($server_endpoint, $server_body, 'POST');
             $servers = $server_res['json']['result']['servers'] ?? [];
-
-
         }
 
 
@@ -728,11 +737,11 @@ add_action('plugins_loaded', function () {
     new ServerSelect();
     Cubixsol_Woo_Order::instance();
     VoucherUI::init();
-//    new Debug_Meta_Helper();
+    new Debug_Meta_Helper();
     WooOrderDebug::init();
 
     // Topup
     TopupAjax::init();
     TopupUI::init();
-    ProductButton::init();
+    new ProductButton();
 });

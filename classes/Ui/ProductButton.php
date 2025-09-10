@@ -3,29 +3,35 @@ namespace classes\ui;
 
 defined('ABSPATH') || exit;
 
-class ProductButton {
-    public static function init() {
-        add_action('woocommerce_after_add_to_cart_button', [__CLASS__, 'decorate_single_button']);
+class ProductButton
+{
+    public function __construct()
+    {
+        add_action('woocommerce_before_add_to_cart_button', [$this, 'maybe_mark_topup'], 15);
     }
 
-    public static function decorate_single_button() {
+    public function maybe_mark_topup()
+    {
         global $product;
+        if (! $product || ! $product->get_id()) return;
 
         $xshop_json = get_post_meta($product->get_id(), 'xshop_json', true);
-        if (!$xshop_json) {
+        if (empty($xshop_json)) {
             return;
         }
 
-        $decoded = json_decode($xshop_json, true);
-        if (empty($decoded['product']['type']) || $decoded['product']['type'] !== 'topup') {
-            return;
-        }
-
+        // We output a tiny JS snippet that marks the button when DOM ready.
+        // This avoids touching Woo templates and keeps things isolated.
         ?>
         <script>
-            jQuery(function($){
-                $('.single_add_to_cart_button').attr('data-xshop-type', 'topup');
-            });
+            (function($){
+                $(function(){
+                    var $btn = $('form.cart').first().find('button.single_add_to_cart_button');
+                    if ($btn.length && !$btn.attr('data-xshop-type')) {
+                        $btn.attr('data-xshop-type', 'topup');
+                    }
+                });
+            })(jQuery);
         </script>
         <?php
     }

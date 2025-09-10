@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="d5495236-100a-4e9e-983a-14a4be928baf" name="xshop" url="http://109.176.196.94">
+        <fileTransfer rootFolder="/public_html/wp-content/plugins/xshop/" host="109.176.196.94" port="21">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

@@ -38,3 +38,15 @@
 .error {
     color: red;
 }
+
+.xshop-modal-content.error {
+    border: 2px solid #e00;
+}
+
+#xshop-validate-body details {
+    margin-top: 10px;
+    font-size: 12px;
+    background: #f8f8f8;
+    padding: 5px;
+    border-radius: 4px;
+}

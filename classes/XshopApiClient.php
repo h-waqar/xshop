@@ -36,7 +36,8 @@ class XshopApiClient
             CLogger::log("XShop API → {$url}", $payload);
 
             // Call existing curl wrapper
-            $res = xshop_api_request_curl($apiPath, $payload, $method);
+//            $res = xshop_api_request_curl($apiPath, $payload, $method);
+            $res = xshop_api_request_curl($url, $payload, $method);
 
             $status    = $res['status'] ?? ($res['response']['code'] ?? 0);
             $rawBody   = $res['body'] ?? '';
