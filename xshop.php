@@ -92,8 +92,8 @@ function cubixsol_define_constants($version)
     $plugin_url = plugin_dir_url($plugin_file);
 
     // Keep your existing constants
-    define('API_BASE_URL', 'https://xshop-sandbox.codashop.com/v2');
-    // define( 'API_BASE_URL', 'https://xshop.codashop.com/v2' ); // Production
+//    define('API_BASE_URL', 'https://xshop-sandbox.codashop.com/v2');
+     define( 'API_BASE_URL', 'https://xshop.codashop.com/v2' ); // Production
     define('PLUGIN_FILE', $plugin_file);
     define('VERSION', $version);
 

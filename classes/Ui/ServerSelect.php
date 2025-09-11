@@ -7,7 +7,13 @@ namespace classes\ui;
 class ServerSelect
 {
     // Define the products where select should appear
-    private array $targetSlugs = ['legacy-fate-sacred-and-fearless-crossborder','mobile-legends-codashop', 'mobile-legends-cross-border'];
+    private array $targetSlugs = [
+        'legacy-fate-sacred-and-fearless-crossborder',
+        'mobile-legends-codashop',
+        'mobile-legends-cross-border',
+        'honkai-star-rail-cross-border',
+        'honkai-star-rail-global',
+    ];
 
     public function __construct()
     {

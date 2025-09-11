@@ -104,6 +104,11 @@ jQuery(function ($) {
             const variationId = $form.find('input[name="variation_id"]').val() || 0;
             // quantity input may be named "quantity" or have custom class - use both fallbacks
             const quantity = $form.find('input[name="quantity"]').val() || $form.find('input.qty, input.qty-input, input.qty-input, .qty-input').val() || 1;
+            const $selected = $form.find('select[name="server"] option:selected');
+            const server = {
+                name: $selected.val() || null,
+                id: $selected.data('id') || null,
+            };
 
             // Serialize entire form (WCPA fields, hidden inputs etc.)
             const formData = $form.serialize();
@@ -122,6 +127,7 @@ jQuery(function ($) {
                 product_id: productId,
                 variation_id: variationId,
                 quantity: quantity,
+                server: server,
                 form_data: formData
             }, (res) => {
                 if (res && res.success) {

@@ -65,6 +65,10 @@ class TopupHandler extends BaseHandler
         $currency = $base['sku_data']['currency'] ?? $decoded['product']['currency'] ?? 'USD';
         $subtype  = $decoded['product']['subtype'] ?? null;
 
+//        CLogger::log('build_validate_payload', '');
+//        CLogger::log('$base', $base);
+//        CLogger::log('userAccount', $userAccount);
+
         // Build the common item
         $item = [
             'sku'         => $base['sku'] ?? null,
@@ -80,16 +84,16 @@ class TopupHandler extends BaseHandler
         switch ((string)$subtype) {
             case '1':
                 // simple userId only (string)
-                $ua = is_string($userAccount) ? $userAccount : ($userAccount['userId'] ?? '');
+                $ua = is_string($userAccount ?:  '');
                 break;
 
             case '2':
                 // requires userId + server {id, name}
                 $ua = [
-                    'userId' => $userAccount['userId'] ?? '',
+                    'userId' => $userAccount ?? '',
                     'server' => [
-                        'id'   => $userAccount['server']['id'] ?? '',
-                        'name' => $userAccount['server']['name'] ?? '',
+                        'id'   => $base['server_id'] ?? '',
+                        'name' => $base['server_name'] ?? '',
                     ],
                 ];
                 break;
@@ -97,8 +101,8 @@ class TopupHandler extends BaseHandler
             case '3':
                 // requires userId + zoneId
                 $ua = [
-                    'userId' => $userAccount['userId'] ?? '',
-                    'zoneId' => $userAccount['zoneId'] ?? '',
+                    'userId' => $userAccount ?? '',
+                    'zoneId' => $base['zone_id'] ?? '',
                 ];
                 break;
 
@@ -167,8 +171,7 @@ class TopupHandler extends BaseHandler
         $decoded = $this->decode_json($xshop_json);
         $apiPath = ltrim($decoded['product']['apiPath'] ?? '', '/');
 
-        CLogger::log('-- Topup endpoint --: ' . $apiPath);
-
-        return "https://xshop-sandbox.codashop.com/v2/{$apiPath}";
+//        return "https://xshop-sandbox.codashop.com/v2/{$apiPath}";
+        return "https://xshop.codashop.com/v2/{$apiPath}";
     }
 }
