@@ -2,11 +2,14 @@
 
 namespace classes\ui;
 
+//classes/Ui/ServerSelect.php:5
 
 class ServerSelect
 {
     // Define the products where select should appear
-    private array $targetSlugs = ['legacy-fate-sacred-and-fearless-crossborder','mobile-legends-codashop', 'mobile-legends-cross-border'];
+    private array $targetSlugs = [
+        'ragnarok-x'
+    ];
 
     public function __construct()
     {

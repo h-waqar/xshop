@@ -3,6 +3,8 @@ namespace classes;
 
 defined('ABSPATH') || exit;
 
+// classes\CLogger.php
+
 class CLogger
 {
     private static string $logDir;

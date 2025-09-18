@@ -12,6 +12,7 @@
   </component>
   <component name="PhpIncludePathManager">
     <include_path>
+      <path value="$PROJECT_DIR$/../../../../laragon/www/city-paints" />
       <path value="$USER_HOME$/Local Sites/parispenthouse/app/public" />
     </include_path>
   </component>
