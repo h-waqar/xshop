@@ -22,13 +22,13 @@ class XshopApiClient
      */
     public static function request(string $apiPath, array $payload, string $method = 'POST'): array
     {
-//        $url = defined('API_BASE_URL')
-//            ? rtrim(API_BASE_URL, '/') . '/' . ltrim($apiPath, '/')
-//            : "https://xshop-sandbox.codashop.com/v2/" . ltrim($apiPath, '/');
-
         $url = defined('API_BASE_URL')
             ? rtrim(API_BASE_URL, '/') . '/' . ltrim($apiPath, '/')
-            : "https://xshop.codashop.com/v2/" . ltrim($apiPath, '/');
+            : "https://xshop-sandbox.codashop.com/v2/" . ltrim($apiPath, '/');
+
+//        $url = defined('API_BASE_URL')
+//            ? rtrim(API_BASE_URL, '/') . '/' . ltrim($apiPath, '/')
+//            : "https://xshop.codashop.com/v2/" . ltrim($apiPath, '/');
 
         // Prevent double v2
         $url = str_replace('/v2/v2/', '/v2/', $url);
@@ -37,7 +37,7 @@ class XshopApiClient
 
 
 
-            CLogger::log("XShop API → {$url}", $payload);
+            CLogger::log("XShop API → {$url}", '');
 
             // Call existing curl wrapper
 //            $res = xshop_api_request_curl($apiPath, $payload, $method);

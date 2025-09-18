@@ -16,26 +16,23 @@ class TopupUI
         add_filter('woocommerce_product_single_add_to_cart_button', [__CLASS__, 'decorate_button'], 10, 2);
     }
 
-    /**
-     * Render the hidden modal container. Content will be injected by JS.
-     */
     public static function render_modal(): void
     {
         ?>
         <div id="xshopValidateModal" class="xshop-modal" style="display:none;">
-            <div class="xshop-modal-content">
-                <span class="xshop-close">&times;</span>
-                <div id="xshop-validate-body">
-                    <!-- JS will inject validation result here -->
-                </div>
+            <div class="xshop-modal-content" role="dialog" aria-modal="true" aria-labelledby="xshop-validate-title">
+                <button type="button" class="xshop-close" aria-label="Close">&times;</button>
+                <h2 id="xshop-validate-title" class="xshop-title">Validate Account</h2>
+                <div id="xshop-validate-body"><p>Waiting for validation...</p></div>
                 <div class="xshop-actions">
                     <button type="button" class="button button-secondary xshop-cancel">Cancel</button>
-                    <button type="button" class="button button-primary xshop-confirm">Continue</button>
+                    <button type="button" class="button button-primary xshop-confirm">Confirm</button>
                 </div>
             </div>
         </div>
         <?php
     }
+
 
     /**
      * Add data attributes to the Add to Cart button if the product is a topup.

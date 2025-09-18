@@ -1,8 +1,4 @@
 // assets/js/xshop.js
-// Intercept WooCommerce single-product "Pay Now" button for xshop topup products.
-// Sends serialized form (so WCPA fields like user account are included) and shows a validation modal.
-// Expects `xshopValidateConfig` localized object from PHP with keys:
-//   - ajax_url (admin-ajax.php), nonce, checkout_url
 
 jQuery(function ($) {
     'use strict';
@@ -11,7 +7,8 @@ jQuery(function ($) {
     class XshopTopup {
         constructor() {
             // We accept several possible modal IDs/classes to be resilient against markup changes
-            this.modalSelectors = ['#xshopValidateModal',       // camelCase id (used in earlier examples)
+            this.modalSelectors = [
+                '#xshopValidateModal',       // camelCase id (used in earlier examples)
                 '#xshop-validate-modal',     // hyphen-case id (older TopupUI)
                 '.xshop-validate-modal',     // class fallback
                 '.xshop-modal'               // generic fallback
@@ -44,7 +41,7 @@ jQuery(function ($) {
                     <div id="xshop-validate-body"><p>Validating... please wait</p></div>
                     <div class="xshop-actions" style="margin-top:12px;text-align:right;">
                         <button type="button" class="button button-secondary xshop-cancel">Cancel</button>
-                        <button type="button" class="button button-primary xshop-confirm">Continue</button>
+                        <button type="button" class="button button-primary xshop-confirm">Confirm</button>
                     </div>
                 </div>
             </div>
@@ -69,22 +66,21 @@ jQuery(function ($) {
                 }
             });
 
-            // modal close (x or cancel)
-            $(document).on('click', `${this.modalSelectors} .xshop-close, ${this.modalSelectors} .xshop-cancel`, () => {
-                $(this.modalSelectors).hide();
+            this.$modal.on('click', '.xshop-close, .xshop-cancel', () => {
+                this.$modal.hide();
             });
 
-            // modal confirm button
-            // $(document).on('click', `${this.modalSelectors} .xshop-confirm`, () => {
-            //     this.addToCart();
+            this.$modal.on('click', '.xshop-confirm', () => {
+                this.addToCart();
+            });
+
+
+            // // optional: close modal on overlay click (if markup uses full-screen overlay)
+            // $(document).on('click', `${this.modalSelectors}`, (ev) => {
+            //     if (ev.target === ev.currentTarget) {
+            //         $(this.modalSelectors).hide();
+            //     }
             // });
-
-            // optional: close modal on overlay click (if markup uses full-screen overlay)
-            $(document).on('click', `${this.modalSelectors}`, (ev) => {
-                if (ev.target === ev.currentTarget) {
-                    $(this.modalSelectors).hide();
-                }
-            });
         }
 
         /**
@@ -152,47 +148,40 @@ jQuery(function ($) {
 
         }
 
-        /**
-         * Render and show validation modal.
-         * `result` is the object returned by PHP (decoded XShop result)
-         * `meta` is an object with product_id, variation_id, form_data (we attach to confirm button)
-         */
-        /**
-         * @param {string} mode "success" or "error"
-         * @param {object} result Response payload
-         * @param {object} meta Extra info
-         */
         showModal(mode, result, meta) {
             const $modal = $(this.modalSelectors).first();
             const $body = $modal.find('#xshop-validate-body');
+            const $title = $modal.find('.xshop-title');
+            const $icon = $modal.find('.xshop-icon');
 
             let html = '';
 
             if (mode === 'success') {
+                $icon.removeClass('error').addClass('success').html('&#10004;'); // tick
+                $title.text('Validated');
+
                 html += `<p><strong>User:</strong> ${this.escapeHtml(result.message?.username || 'N/A')}</p>`;
 
                 if (result.message?.roles?.length) {
-                    html += '<p><label for="xshopRole">Select Role:</label><br>';
-                    html += '<select id="xshopRole">';
-                    result.message.roles.forEach((r) => {
-                        html += `<option value="${this.escapeHtml(String(r.id))}">${this.escapeHtml(r.name)}</option>`;
-                    });
-                    html += '</select></p>';
+                    html += `
+                <p>
+                    <label for="xshopRole">Select Role:</label><br>
+                    <select id="xshopRole" class="xshop-role-select">
+                        ${result.message.roles.map(r =>
+                        `<option value="${this.escapeHtml(String(r.id))}">${this.escapeHtml(r.name)}</option>`
+                    ).join('')}
+                    </select>
+                </p>
+            `;
                 }
-
             } else if (mode === 'error') {
-                html += `<p class="error"><strong>Error:</strong> ${this.escapeHtml(result.message || 'Unknown error')}</p>`;
+                $icon.removeClass('success').addClass('error').html('&#10006;'); // cross
+                $title.text('Not Validated');
+                html += `<div class="xshop-error"><p>${this.escapeHtml(result.message || 'Validation failed')}</p></div>`;
             }
-
-            // Always include debug <details>
-            html += `<details><summary>Debug info</summary><pre style="white-space:pre-wrap;">${this.escapeHtml(JSON.stringify({
-                result,
-                meta
-            }, null, 2))}</pre></details>`;
 
             $body.html(html);
 
-            // toggle buttons depending on mode
             const $confirm = $modal.find('.xshop-confirm');
             if (mode === 'success') {
                 $confirm.show()
@@ -201,11 +190,12 @@ jQuery(function ($) {
                     .data('form-data', meta.form_data || '')
                     .data('validate', result || {});
             } else {
-                $confirm.hide(); // nothing to confirm on error
+                $confirm.hide();
             }
 
             $modal.show();
         }
+
 
 
         /**

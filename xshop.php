@@ -74,7 +74,14 @@ function enqueue_admin_scripts()
 function enqueue_front_scripts()
 {
     wp_enqueue_style('xshop', plugins_url('/assets/css/xshop.css', PLUGIN_FILE), [], VERSION);
-//    wp_enqueue_script('xshop', plugins_url('/assets/js/xshop.js', PLUGIN_FILE), ['jquery'], VERSION);
+//    wp_enqueue_style('fontawesome', plugins_url('/assets/css/fontawesome.min.css', PLUGIN_FILE), [], VERSION);
+    wp_enqueue_style(
+        'fontawesome',
+        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css',
+        []
+    );
+
+    wp_enqueue_script('topup-ui', plugins_url('/assets/js/topup-ui.js', PLUGIN_FILE), ['jquery'], VERSION);
     wp_enqueue_script('xshop', plugins_url('/assets/js/xshop.js', PLUGIN_FILE), ['jquery'],  filemtime(plugin_dir_path(PLUGIN_FILE) . 'assets/js/xshop.js'), true);
     wp_localize_script('xshop', 'xshopValidateConfig', ['ajax_url' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('xshop-validate'), 'checkout_url' => wc_get_checkout_url(),]);
 }
@@ -92,8 +99,8 @@ function cubixsol_define_constants($version)
     $plugin_url = plugin_dir_url($plugin_file);
 
     // Keep your existing constants
-//    define('API_BASE_URL', 'https://xshop-sandbox.codashop.com/v2');
-     define( 'API_BASE_URL', 'https://xshop.codashop.com/v2' ); // Production
+    define('API_BASE_URL', 'https://xshop-sandbox.codashop.com/v2');
+//    define( 'API_BASE_URL', 'https://xshop.codashop.com/v2' );
     define('PLUGIN_FILE', $plugin_file);
     define('VERSION', $version);
 
@@ -648,6 +655,7 @@ function cubixsol_create_product_catgory($name, $id, $type, $parent = 0)
         wp_set_object_terms($id, array($name), $type, true);
         return $term_id;
     }
+
 }
 
 /**
