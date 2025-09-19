@@ -58,6 +58,9 @@ class OrderProcessor
                 continue;
             }
 
+            // Detect type
+            $type = $product_info['type'] ?? '';
+
             try {
                 $base = [
                     'sku'       => $sku_data['sku'] ?? null,

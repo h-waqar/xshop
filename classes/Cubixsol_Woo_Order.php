@@ -47,7 +47,7 @@ class Cubixsol_Woo_Order
             return;
         }
 
-        CLogger::log('Run process method', $order_id);
+//        CLogger::log('Run process method', $order_id);
         (new OrderProcessor())->process($order_id);
     }
 }

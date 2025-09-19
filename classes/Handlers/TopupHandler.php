@@ -18,13 +18,28 @@ class TopupHandler extends BaseHandler
         return 'topup';
     }
 
+//    public function build_payload(array $base, $xshop_json, $item, $order, $variation_product): array
+//    {
+//        // normalize JSON
+//        $decoded = $this->decode_json($xshop_json);
+//
+//        // Default build_payload acts like validate
+//        return $this->build_validate_payload($base, $decoded, $item->get_meta('xshop_userAccount', true));
+//    }
+
+
     public function build_payload(array $base, $xshop_json, $item, $order, $variation_product): array
     {
-        // normalize JSON
-        $decoded = $this->decode_json($xshop_json);
+        $decoded     = $this->decode_json($xshop_json);
+        $userAccount = $item->get_meta('xshop_userAccount', true);
 
-        // Default build_payload acts like validate
-        return $this->build_validate_payload($base, $decoded, $item->get_meta('xshop_userAccount', true));
+        // If we’re in an actual Woo order (has ID) → topup
+        if ($order && $order->get_id()) {
+            return $this->build_topup_payload($base, $decoded, $userAccount, (string) $order->get_id());
+        }
+
+        // Otherwise (cart/validate flow) → validate
+        return $this->build_validate_payload($base, $decoded, $userAccount);
     }
 
 
@@ -97,15 +112,16 @@ class TopupHandler extends BaseHandler
     }
 
 
-
     public function build_topup_payload(array $base, $xshop_json, $userAccount, string $orderId, bool $usingValidateIdForTopup = false): array
     {
         $decoded  = $this->decode_json($xshop_json);
         $currency = $base['sku_data']['currency'] ?? $decoded['product']['currency'] ?? 'USD';
+        $subtype  = $decoded['product']['subtype'] ?? null;
 
+        // Build the item
         $item = [
-            'sku'         => $base['sku'] ?? null,
-            'description' => $base['sku_data']['description'] ?? null,
+            'sku'         => $base['sku'] ?? '',
+            'description' => $base['sku_data']['description'] ?? '',
             'quantity'    => (int)($base['quantity'] ?? 1),
             'price'       => [
                 'amount'   => (float)($base['price'] ?? 0.0),
@@ -113,9 +129,37 @@ class TopupHandler extends BaseHandler
             ],
         ];
 
+        // Build userAccount same way as validate
+        switch ((string)$subtype) {
+            case '1':
+                $ua = (string)($userAccount ?: '');
+                break;
+
+            case '2':
+                $ua = [
+                    'userId' => $userAccount ?? '',
+                    'server' => [
+                        'id'   => $base['server_id'] ?? '',
+                        'name' => $base['server_name'] ?? '',
+                    ],
+                ];
+                break;
+
+            case '3':
+                $ua = [
+                    'userId' => $userAccount ?? '',
+                    'zoneId' => $base['zone_id'] ?? '',
+                ];
+                break;
+
+            default:
+                $ua = is_string($userAccount) ? $userAccount : ($userAccount['userId'] ?? '');
+                break;
+        }
+
         $params = [
             'items'       => [$item],
-            'userAccount' => $userAccount,
+            'userAccount' => $ua,
             'orderId'     => $orderId,
             'customerId'  => $base['customerId'] ?? '',
             'iat'         => time(),
@@ -136,6 +180,48 @@ class TopupHandler extends BaseHandler
 
         return $payload;
     }
+
+
+
+
+//    public function build_topup_payload(array $base, $xshop_json, $userAccount, string $orderId, bool $usingValidateIdForTopup = false): array
+//    {
+//        $decoded  = $this->decode_json($xshop_json);
+//        $currency = $base['sku_data']['currency'] ?? $decoded['product']['currency'] ?? 'USD';
+//
+//        $item = [
+//            'sku'         => $base['sku'] ?? null,
+//            'description' => $base['sku_data']['description'] ?? null,
+//            'quantity'    => (int)($base['quantity'] ?? 1),
+//            'price'       => [
+//                'amount'   => (float)($base['price'] ?? 0.0),
+//                'currency' => $currency,
+//            ],
+//        ];
+//
+//        $params = [
+//            'items'       => [$item],
+//            'userAccount' => $userAccount,
+//            'orderId'     => $orderId,
+//            'customerId'  => $base['customerId'] ?? '',
+//            'iat'         => time(),
+//        ];
+//
+//        $payload = [
+//            'jsonrpc' => '2.0',
+//            'id'      => $usingValidateIdForTopup
+//                ? ($base['validate_id'] ?? 'topup_' . uniqid('', true))
+//                : ('topup_' . uniqid('', true)),
+//            'method'  => 'topup',
+//            'params'  => $params,
+//        ];
+//
+//        if ($usingValidateIdForTopup) {
+//            $payload['usingValidateIdForTopup'] = true;
+//        }
+//
+//        return $payload;
+//    }
 
     public function get_endpoint($xshop_json = null, $sku = null): string
     {
