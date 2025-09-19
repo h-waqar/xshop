@@ -7,8 +7,6 @@ defined('ABSPATH') || exit;
 
 include_once PLUGIN_DIR_PATH . 'classes/CLogger.php';
 
-use classes\CLogger;
-
 class CartDataHandler
 {
     public static function add_data_to_cart($cart_item_data, $product_id, $variation_id)
@@ -24,15 +22,7 @@ class CartDataHandler
             // --- 1) Product info ---
             if (!empty($decoded['product'])) {
                 $product = $decoded['product'];
-                $product_info = [
-                    'name' => $product['name'] ?? null,
-                    'apiPath' => $product['apiPath'] ?? null,
-                    'type' => $product['type'] ?? null,
-                    'subtype' => $product['subtype'] ?? null,
-                    'haveRole' => $product['haveRole'] ?? null,
-                    'haveVerify' => $product['haveVerify'] ?? null,
-                    'supportedCountries' => $product['supportedCountries'] ?? [],
-                ];
+                $product_info = ['name' => $product['name'] ?? null, 'apiPath' => $product['apiPath'] ?? null, 'type' => $product['type'] ?? null, 'subtype' => $product['subtype'] ?? null, 'haveRole' => $product['haveRole'] ?? null, 'haveVerify' => $product['haveVerify'] ?? null, 'supportedCountries' => $product['supportedCountries'] ?? [],];
             }
 
             // --- 2) Selected SKU ---
@@ -44,20 +34,7 @@ class CartDataHandler
                     $sku_desc = $normalize($sku['description'] ?? '');
 
                     if ($sku_desc === $selected_variation) {
-                        $selected_sku_data = [
-                            'sku' => $sku['sku'] ?? null,
-                            'description' => $sku['description'] ?? null,
-                            'price' => $sku['price'] ?? null,
-                            'currency' => $sku['currency'] ?? null,
-                            'originalPrice' => $sku['originalPrice'] ?: null,
-                            'originalCurrency' => $sku['originalCurrency'] ?: null,
-                            'retailPrice' => $sku['retailPrice'] ?? null,
-                            'retailCurrency' => $sku['retailCurrency'] ?? null,
-                            'countryCode' => $sku['countryCode'] ?? null,
-                            'origin' => $sku['origin'] ?? null,
-                            'selected_server' => $_POST['server'] ?? null,
-                            'selected_server_id' => isset($_POST['server_id']) ? intval($_POST['server_id']) : null,
-                        ];
+                        $selected_sku_data = ['sku' => $sku['sku'] ?? null, 'description' => $sku['description'] ?? null, 'price' => $sku['price'] ?? null, 'currency' => $sku['currency'] ?? null, 'originalPrice' => $sku['originalPrice'] ?: null, 'originalCurrency' => $sku['originalCurrency'] ?: null, 'retailPrice' => $sku['retailPrice'] ?? null, 'retailCurrency' => $sku['retailCurrency'] ?? null, 'countryCode' => $sku['countryCode'] ?? null, 'origin' => $sku['origin'] ?? null, 'selected_server' => $_POST['server'] ?? null, 'selected_server_id' => isset($_POST['server_id']) ? intval($_POST['server_id']) : null,];
                         break;
                     }
                 }
@@ -105,5 +82,26 @@ class CartDataHandler
         if (isset($values['xshop_json'])) {
             $item->add_meta_data('xshop_json', $values['xshop_json'], true);
         }
+
+
+        //        ----------------------------------------- New Ones
+
+        if (isset($values['xshop_validate'])) {
+            $item->add_meta_data('xshop_validate', $values['xshop_validate'], true);
+        }
+        if (isset($values['xshop_validate_id'])) {
+            $item->add_meta_data('xshop_validate_id', $values['xshop_validate_id'], true);
+        }
+        if (isset($values['xshop_validate_orderId'])) {
+            $item->add_meta_data('xshop_validate_orderId', $values['xshop_validate_orderId'], true);
+        }
+        if (isset($values['xshop_userAccount'])) {
+            $item->add_meta_data('xshop_userAccount', $values['xshop_userAccount'], true);
+        }
+        if (isset($values['xshop_resolved_fields'])) {
+            $item->add_meta_data('xshop_resolved_fields', $values['xshop_resolved_fields'], true);
+        }
+
+
     }
 }

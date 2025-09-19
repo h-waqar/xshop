@@ -20,12 +20,18 @@ class TopupHandler extends BaseHandler
 
 //    public function build_payload(array $base, $xshop_json, $item, $order, $variation_product): array
 //    {
-//        // normalize JSON
-//        $decoded = $this->decode_json($xshop_json);
+//        $decoded     = $this->decode_json($xshop_json);
+//        $userAccount = $item->get_meta('xshop_userAccount', true);
 //
-//        // Default build_payload acts like validate
-//        return $this->build_validate_payload($base, $decoded, $item->get_meta('xshop_userAccount', true));
+//        // If we’re in an actual Woo order (has ID) → topup
+//        if ($order && $order->get_id()) {
+//            return $this->build_topup_payload($base, $decoded, $userAccount, (string) $order->get_id());
+//        }
+//
+//        // Otherwise (cart/validate flow) → validate
+//        return $this->build_validate_payload($base, $decoded, $userAccount);
 //    }
+
 
 
     public function build_payload(array $base, $xshop_json, $item, $order, $variation_product): array
@@ -35,7 +41,14 @@ class TopupHandler extends BaseHandler
 
         // If we’re in an actual Woo order (has ID) → topup
         if ($order && $order->get_id()) {
-            return $this->build_topup_payload($base, $decoded, $userAccount, (string) $order->get_id());
+            // prefer validate_order_id returned by validate call (must be used in topup)
+            $orderIdFromValidate = $base['validate_order_id'] ?? null;
+
+            // if not present, fall back to using validate_id or last fallback use Woo order id (less preferred)
+            $usingValidateIdForTopup = !empty($base['validate_id']);
+            $orderIdToSend = $orderIdFromValidate ?: ($base['validate_id'] ?? (string)$order->get_id());
+
+            return $this->build_topup_payload($base, $decoded, $userAccount, (string)$orderIdToSend, (bool)$usingValidateIdForTopup);
         }
 
         // Otherwise (cart/validate flow) → validate
@@ -114,9 +127,20 @@ class TopupHandler extends BaseHandler
 
     public function build_topup_payload(array $base, $xshop_json, $userAccount, string $orderId, bool $usingValidateIdForTopup = false): array
     {
+
         $decoded  = $this->decode_json($xshop_json);
         $currency = $base['sku_data']['currency'] ?? $decoded['product']['currency'] ?? 'USD';
         $subtype  = $decoded['product']['subtype'] ?? null;
+
+        CLogger::log('---------------------BAM-----------------------------');
+
+        CLogger::log('Decoded', $decoded);
+
+        CLogger::log('Currency ',$currency);
+
+        CLogger::log('Subtype ',$subtype);
+
+        CLogger::log('---------------------BAM-----------------------------');
 
         // Build the item
         $item = [
@@ -133,6 +157,13 @@ class TopupHandler extends BaseHandler
         switch ((string)$subtype) {
             case '1':
                 $ua = (string)($userAccount ?: '');
+                // if role provided, topup expects userAccount as object with roleId for subtype=1 with role (rare)
+                if (!empty($base['role_id'])) {
+                    $ua = [
+                        'userId' => (string)$userAccount,
+                        'roleId' => (string)$base['role_id']
+                    ];
+                }
                 break;
 
             case '2':
@@ -143,6 +174,9 @@ class TopupHandler extends BaseHandler
                         'name' => $base['server_name'] ?? '',
                     ],
                 ];
+                if (!empty($base['role_id'])) {
+                    $ua['roleId'] = (string)$base['role_id'];
+                }
                 break;
 
             case '3':
@@ -150,10 +184,20 @@ class TopupHandler extends BaseHandler
                     'userId' => $userAccount ?? '',
                     'zoneId' => $base['zone_id'] ?? '',
                 ];
+                if (!empty($base['role_id'])) {
+                    $ua['roleId'] = (string)$base['role_id'];
+                }
                 break;
 
             default:
                 $ua = is_string($userAccount) ? $userAccount : ($userAccount['userId'] ?? '');
+                if (!empty($base['role_id'])) {
+                    if (is_string($ua)) {
+                        $ua = ['userId' => $ua, 'roleId' => (string)$base['role_id']];
+                    } else {
+                        $ua['roleId'] = (string)$base['role_id'];
+                    }
+                }
                 break;
         }
 
@@ -180,48 +224,6 @@ class TopupHandler extends BaseHandler
 
         return $payload;
     }
-
-
-
-
-//    public function build_topup_payload(array $base, $xshop_json, $userAccount, string $orderId, bool $usingValidateIdForTopup = false): array
-//    {
-//        $decoded  = $this->decode_json($xshop_json);
-//        $currency = $base['sku_data']['currency'] ?? $decoded['product']['currency'] ?? 'USD';
-//
-//        $item = [
-//            'sku'         => $base['sku'] ?? null,
-//            'description' => $base['sku_data']['description'] ?? null,
-//            'quantity'    => (int)($base['quantity'] ?? 1),
-//            'price'       => [
-//                'amount'   => (float)($base['price'] ?? 0.0),
-//                'currency' => $currency,
-//            ],
-//        ];
-//
-//        $params = [
-//            'items'       => [$item],
-//            'userAccount' => $userAccount,
-//            'orderId'     => $orderId,
-//            'customerId'  => $base['customerId'] ?? '',
-//            'iat'         => time(),
-//        ];
-//
-//        $payload = [
-//            'jsonrpc' => '2.0',
-//            'id'      => $usingValidateIdForTopup
-//                ? ($base['validate_id'] ?? 'topup_' . uniqid('', true))
-//                : ('topup_' . uniqid('', true)),
-//            'method'  => 'topup',
-//            'params'  => $params,
-//        ];
-//
-//        if ($usingValidateIdForTopup) {
-//            $payload['usingValidateIdForTopup'] = true;
-//        }
-//
-//        return $payload;
-//    }
 
     public function get_endpoint($xshop_json = null, $sku = null): string
     {

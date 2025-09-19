@@ -43,6 +43,19 @@ class OrderProcessor
             $xshop_json_raw = $item->get_meta('xshop_json', true);
             $xshop_json     = is_string($xshop_json_raw) ? json_decode($xshop_json_raw, true) : $xshop_json_raw;
 
+            // --------------------------------------------------------------------------------------------------------
+            // sku_data already pulled earlier as $sku_data
+            $validate_meta = $item->get_meta('xshop_validate', true);
+            $validate_id   = $item->get_meta('xshop_validate_id', true) ?? $validate_meta['id'] ?? null;
+            $validate_orderId = $item->get_meta('xshop_validate_orderId', true)
+                ?? $validate_meta['orderId']
+                ?? ($validate_meta['result']['orderId'] ?? null);
+            $server_id   = $sku_data['selected_server_id'] ?? ($sku_data['selected_server']['id'] ?? null);
+            $server_name = is_array($sku_data['selected_server']) ? ($sku_data['selected_server']['name'] ?? null) : ($sku_data['selected_server'] ?? null);
+            $zone_id     = $sku_data['zoneId'] ?? $item->get_meta('xshop_zoneId', true) ?? null;
+            $role_id     = $item->get_meta('xshop_role_id', true) ?? null;
+            // --------------------------------------------------------------------------------------------------------
+
             if (empty($product_info) || empty($sku_data)) {
                 CLogger::log('Missing product/sku meta - skipping item', [
                     'item_id'      => $item_id,
@@ -62,6 +75,9 @@ class OrderProcessor
             $type = $product_info['type'] ?? '';
 
             try {
+
+
+                // build base
                 $base = [
                     'sku'       => $sku_data['sku'] ?? null,
                     'price'     => (float) $item->get_total(),
@@ -69,7 +85,25 @@ class OrderProcessor
                     'sku_data'  => $sku_data,
                     'skuPrices' => $sku_prices,
                     'product'   => $product_info,
+                    'customerId'=> $order->get_customer_id() ? (string)$order->get_customer_id() : $order->get_billing_email(),
+                    'server_id' => $server_id,
+                    'server_name' => $server_name,
+                    'zone_id'   => $zone_id,
+                    'validate_id' => $validate_id,
+                    'validate_order_id' => $validate_orderId,
+                    'role_id'   => $role_id,
                 ];
+
+
+//                -----------------------------------------------------------
+//                $base = [
+//                    'sku'       => $sku_data['sku'] ?? null,
+//                    'price'     => (float) $item->get_total(),
+//                    'quantity'  => $item->get_quantity(),
+//                    'sku_data'  => $sku_data,
+//                    'skuPrices' => $sku_prices,
+//                    'product'   => $product_info,
+//                ];
                 $payload = $handler->build_payload($base, $xshop_json, $item, $order, $item->get_product());
             } catch (\Throwable $e) {
                 CLogger::log('Payload Error', $e->getMessage());
