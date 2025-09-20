@@ -34,7 +34,20 @@ class CartDataHandler
                     $sku_desc = $normalize($sku['description'] ?? '');
 
                     if ($sku_desc === $selected_variation) {
-                        $selected_sku_data = ['sku' => $sku['sku'] ?? null, 'description' => $sku['description'] ?? null, 'price' => $sku['price'] ?? null, 'currency' => $sku['currency'] ?? null, 'originalPrice' => $sku['originalPrice'] ?: null, 'originalCurrency' => $sku['originalCurrency'] ?: null, 'retailPrice' => $sku['retailPrice'] ?? null, 'retailCurrency' => $sku['retailCurrency'] ?? null, 'countryCode' => $sku['countryCode'] ?? null, 'origin' => $sku['origin'] ?? null, 'selected_server' => $_POST['server'] ?? null, 'selected_server_id' => isset($_POST['server_id']) ? intval($_POST['server_id']) : null,];
+                        $selected_sku_data = [
+                            'sku' => $sku['sku'] ?? null,
+                            'description' => $sku['description'] ?? null,
+                            'price' => $sku['price'] ?? null,
+                            'currency' => $sku['currency'] ?? null,
+                            'originalPrice' => $sku['originalPrice'] ?: null,
+                            'originalCurrency' => $sku['originalCurrency'] ?: null,
+                            'retailPrice' => $sku['retailPrice'] ?? null,
+                            'retailCurrency' => $sku['retailCurrency'] ?? null,
+                            'countryCode' => $sku['countryCode'] ?? null,
+                            'origin' => $sku['origin'] ?? null,
+                            'selected_server' => $_POST['server'] ?? null,
+                            'selected_server_id' => isset($_POST['server_id']) ? intval($_POST['server_id']) : null,
+                        ];
                         break;
                     }
                 }

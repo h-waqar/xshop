@@ -43,7 +43,7 @@ class TopupHandler extends BaseHandler
     public function build_validate_payload(array $base, $xshop_json, $userAccount): array
     {
         $decoded  = $this->decode_json($xshop_json);
-        $currency = $base['sku_data']['currency'] ?? $decoded['product']['currency'] ?? 'USD';
+        $currency = $base['sku_data']['currency'] ?? 'USD'; // we can also add USD for fallback
         $subtype  = $decoded['product']['subtype'] ?? null;
 
 //        CLogger::log('build_validate_payload', '');
@@ -113,7 +113,7 @@ class TopupHandler extends BaseHandler
     {
 
         $decoded  = $this->decode_json($xshop_json);
-        $currency = $base['sku_data']['currency'] ?? $decoded['product']['currency'] ?? 'USD';
+        $currency = $base['sku_data']['currency'] ?? $decoded['product']['currency'] ?? '';
         $subtype  = $decoded['product']['subtype'] ?? null;
 
         CLogger::log('---------------------BAM-----------------------------');

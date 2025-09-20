@@ -99,8 +99,8 @@ function cubixsol_define_constants($version)
     $plugin_url = plugin_dir_url($plugin_file);
 
     // Keep your existing constants
-//    define('API_BASE_URL', 'https://xshop-sandbox.codashop.com/v2/');
-    define( 'API_BASE_URL', 'https://xshop.codashop.com/v2/' );
+    define('API_BASE_URL', 'https://xshop-sandbox.codashop.com/v2/');
+//    define( 'API_BASE_URL', 'https://xshop.codashop.com/v2/' );
     define('PLUGIN_FILE', $plugin_file);
     define('VERSION', $version);
 
@@ -558,7 +558,7 @@ function cubixsol_create_product_variation($variations, $post_id, $supported_cou
 
         // Check if variation exists
         $maybe_post_id = cubixsol_get_product_by_xshop_id('_xshop_variation_id', $var_id);
-        $variation_id = $maybe_post_id ? $maybe_post_id : 0;
+        $variation_id = $maybe_post_id ?: 0;
 
         if ($variation_id == 0) {
             $variation_post = array('post_title' => get_the_title($post_id) . ' - ' . $var_name, 'post_name' => 'product-' . $post_id . '-variation-' . sanitize_title($var_id), 'post_status' => 'publish', 'post_parent' => $post_id, 'post_type' => 'product_variation', 'guid' => get_permalink($post_id));

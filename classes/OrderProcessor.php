@@ -90,7 +90,7 @@ class OrderProcessor
                     'sku_data'        => $sku_data,
                     'skuPrices'       => $sku_prices,
                     'product'         => $product_info,
-                    'customerId'      => $order->get_customer_id() ? (string)$order->get_customer_id() : $order->get_billing_email(),
+                    'customerId'      => $order->get_billing_email() ?? (string)$order->get_customer_id(),
                     'server_id'       => $server_id,
                     'server_name'     => $server_name,
                     'zone_id'         => $zone_id,

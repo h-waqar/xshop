@@ -145,7 +145,17 @@ class TopupAjax
             }
 
             // Prepare base payload for API
-            $base = ['sku' => $sku, 'price' => (float)($sku_data['price'] ?? 0.0), 'quantity' => $quantity, 'sku_data' => $sku_data, 'product' => $xshop_json['product'] ?? [], 'customerId' => is_user_logged_in() ? wp_get_current_user()->user_email : '', 'server_id' => $server_id ?? null, 'server_name' => $server_name ?? null, 'zone_id' => $zoneId != '' ? $zoneId : null,];
+            $base = [
+                'sku' => $sku,
+                'price' => (float)($sku_data['price'] ?? 0.0),
+                'quantity' => $quantity,
+                'sku_data' => $sku_data,
+                'product' => $xshop_json['product'] ?? [],
+                'customerId' => is_user_logged_in() ? wp_get_current_user()->user_email : '',
+                'server_id' => $server_id ?? null,
+                'server_name' => $server_name ?? null,
+                'zone_id' => $zoneId != '' ? $zoneId : null,
+            ];
 
             // Initialize handler
             $handler = new TopupHandler();
@@ -532,8 +542,8 @@ class TopupAjax
             $selected_sku_data = [
                 'sku' => $sku,
                 'description' => $sku_data['description'] ?? '',
-                'price' => $sku_data['price'] ?? ($sku_data['retailPrice'] ?? 0.0),
-                'currency' => $sku_data['currency'] ?? ($sku_data['retailCurrency'] ?? ($xshop_json['product']['currency'] ?? 'USD')),
+                'price' => $sku_data['price'] ??  0.0,
+                'currency' => $sku_data['currency'] ?? '',
                 'originalPrice' => $sku_data['originalPrice'] ?? null,
                 'originalCurrency' => $sku_data['originalCurrency'] ?? null,
                 'retailPrice' => $sku_data['retailPrice'] ?? null,
