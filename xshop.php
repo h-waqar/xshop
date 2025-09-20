@@ -722,7 +722,8 @@ require_once PLUGIN_DIR_PATH . '/classes/Debug_Meta_Helper.php';
 require_once PLUGIN_DIR_PATH . '/classes/OrderProcessor.php';
 require_once PLUGIN_DIR_PATH . '/classes/Ui/ServerSelect.php';
 require_once PLUGIN_DIR_PATH . '/classes/Ui/VoucherUI.php';
-include_once PLUGIN_DIR_PATH . 'classes/Ui/Admin/WooOrderDebug.php';
+//include_once PLUGIN_DIR_PATH . 'classes/Ui/Admin/WooOrderDebug.php';
+include_once PLUGIN_DIR_PATH . 'classes/Ui/Admin/WooOrderDetails.php';
 
 // Topup
 require_once PLUGIN_DIR_PATH . '/classes/Ajax/TopupAjax.php';
@@ -734,7 +735,8 @@ include_once PLUGIN_DIR_PATH . 'classes/Ui/ProductButton.php';
 use classes\ajax\TopupAjax;
 use classes\Cubixsol_Woo_Order;
 use classes\Debug_Meta_Helper;
-use classes\ui\Admin\WooOrderDebug;
+//use classes\ui\Admin\WooOrderDebug;
+use classes\ui\Admin\WooOrderDetails;
 use classes\ui\ProductButton;
 use classes\ui\ServerSelect;
 use classes\ui\TopupUI;
@@ -746,7 +748,8 @@ add_action('plugins_loaded', function () {
     Cubixsol_Woo_Order::instance();
     VoucherUI::init();
     new Debug_Meta_Helper();
-    WooOrderDebug::init();
+    WooOrderDetails::init();
+//    WooOrderDebug::init();
 
     // Topup
     TopupAjax::init();
