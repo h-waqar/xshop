@@ -23,9 +23,30 @@ class WooOrderDebug
 
         // Hide raw xshop_json from default item meta
         add_filter('woocommerce_hidden_order_itemmeta', function (array $hidden) {
-            $hidden[] = 'xshop_json';
-            return $hidden;
+            return array_merge($hidden, [
+                    'xshop_json',
+                    'xshop_validate_orderId',
+                    'xshop_role_id',
+            ]);
         });
+
+        // Remove unwanted meta from frontend order item display
+        add_filter('woocommerce_order_item_get_formatted_meta_data', function ($formatted_meta, $item) {
+            $blocked_keys = [
+                    'xshop_json',
+                    'xshop_validate_orderId',
+                    'xshop_role_id',
+            ];
+
+            foreach ($formatted_meta as $meta_id => $meta) {
+                if (in_array($meta->key, $blocked_keys, true)) {
+                    unset($formatted_meta[$meta_id]);
+                }
+            }
+
+            return $formatted_meta;
+        }, 10, 2);
+
     }
 
     public static function render_debug_button(WC_Order $order): void

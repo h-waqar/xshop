@@ -8,7 +8,9 @@ class ServerSelect
 {
     // Define the products where select should appear
     private array $targetSlugs = [
-        'ragnarok-x'
+        'ragnarok-x',
+        'era-of-celestials',
+        'honkai-star-rail-crossborder',
     ];
 
     public function __construct()

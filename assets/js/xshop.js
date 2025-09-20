@@ -217,6 +217,8 @@ jQuery(function ($) {
             const validateResult = $confirm.data('validate') || {};
             const roleId = $('select#xshopRole').length ? $('select#xshopRole').val() : null;
 
+            console.log("Role Id: ",roleId);
+
             // derive sku if present in validate result (message.sku might exist)
             let sku = '';
             if (validateResult && validateResult.message && validateResult.message.sku) {

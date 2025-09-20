@@ -37,10 +37,10 @@ class OrderProcessor
         foreach ($order->get_items() as $item_id => $item) {
             CLogger::log('--- ITEM START ---', $item_id);
 
-            $product_info   = $item->get_meta('xshop_product', true);
-            $sku_data       = $item->get_meta('xshop_selected_sku', true);
-            $sku_prices     = $item->get_meta('xshop_skuPrices', true);
-            $xshop_json_raw = $item->get_meta('xshop_json', true);
+            $product_info   = $item->get_meta('xshop_product');
+            $sku_data       = $item->get_meta('xshop_selected_sku');
+            $sku_prices     = $item->get_meta('xshop_skuPrices');
+            $xshop_json_raw = $item->get_meta('xshop_json');
             $xshop_json     = is_string($xshop_json_raw) ? json_decode($xshop_json_raw, true) : $xshop_json_raw;
 
             // --------------------------------------------------------------------------------------------------------
@@ -52,8 +52,8 @@ class OrderProcessor
                 ?? ($validate_meta['result']['orderId'] ?? null);
             $server_id   = $sku_data['selected_server_id'] ?? ($sku_data['selected_server']['id'] ?? null);
             $server_name = is_array($sku_data['selected_server']) ? ($sku_data['selected_server']['name'] ?? null) : ($sku_data['selected_server'] ?? null);
-            $zone_id     = $sku_data['zoneId'] ?? $item->get_meta('xshop_zoneId', true) ?? null;
-            $role_id     = $item->get_meta('xshop_role_id', true) ?? null;
+            $zone_id     = $sku_data['zoneId'] ?? $item->get_meta('xshop_zoneId') ?? null;
+            $role_id     = $item->get_meta('xshop_role_id') ?? null;
             // --------------------------------------------------------------------------------------------------------
 
             if (empty($product_info) || empty($sku_data)) {
@@ -93,6 +93,10 @@ class OrderProcessor
                     'validate_order_id' => $validate_orderId,
                     'role_id'   => $role_id,
                 ];
+
+                CLogger::log("base===============================================");
+                CLogger::log("base===============================================",$base);
+                CLogger::log("base===============================================");
 
 
 //                -----------------------------------------------------------

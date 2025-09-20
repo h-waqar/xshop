@@ -150,24 +150,6 @@ class TopupAjax
             // Initialize handler
             $handler = new TopupHandler();
 
-//            // Build payload and call API
-//            $payload = $handler->build_validate_payload($base, $xshop_json, $userAccount);
-//            $endpoint = $handler->get_endpoint($xshop_json, $sku);
-//            $apiPath = ltrim(parse_url($endpoint, PHP_URL_PATH) ?: '', '/');
-//
-//            $res = XshopApiClient::request($apiPath, $payload, 'POST');
-//
-//            // Handle API response
-//            if ($res['success'] && isset($res['decoded']['result'])) {
-//                $out = ['result' => $res['decoded']['result'], 'raw' => $res, 'resolved_fields' => $resolved,];
-//                wp_send_json_success($out);
-//            } else {
-//                if ($error_logs) CLogger::log('AJAX validate - API failure', $res);
-//                wp_send_json_error(['message' => 'Validation failed', 'status' => $res['status'], 'decoded' => $res['decoded']]);
-//            }
-
-//            ------------------------------------------------------------------------------------------------
-
             // Build payload and call API
             $payload  = $handler->build_validate_payload($base, $xshop_json, $userAccount);
             $validate_id = $payload['id'] ?? null;
@@ -196,12 +178,6 @@ class TopupAjax
                 if ($error_logs) CLogger::log('AJAX validate - API failure', $res);
                 wp_send_json_error(['message' => 'Validation failed', 'status' => $res['status'], 'decoded' => $res['decoded']]);
             }
-
-//            ------------------------------------------------------------------------------------------------
-
-
-
-
 
         } catch (Throwable $e) {
             // Log exception properly
@@ -392,126 +368,6 @@ class TopupAjax
         }
     }
 
-//    public static function handle_add_to_cart(): void
-//    {
-//        try {
-//            CLogger::log('handle_add_to_cart', '***************************************************************');
-//            CLogger::log('AJAX add_to_cart - raw $_POST', $_POST);
-//
-//            // Nonce check
-//            if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field($_POST['nonce']), 'xshop-validate')) {
-//                CLogger::log('AJAX add_to_cart - nonce failed', $_POST['nonce'] ?? null);
-//                wp_send_json_error(['message' => 'Invalid nonce'], 403);
-//            }
-//
-//            $product_id         = absint($_POST['product_id'] ?? 0);
-//            $variation_id       = absint($_POST['variation_id'] ?? 0);
-//            $sku                = sanitize_text_field($_POST['sku'] ?? '');
-//            $validate_result_raw = $_POST['validate_result'] ?? null;
-//            $server             = $_POST['server'] ?? null;
-//
-//            // Decode validate_result
-//            $validate_result = is_string($validate_result_raw)
-//                ? json_decode(wp_unslash($validate_result_raw), true)
-//                : $validate_result_raw;
-//
-//            if (!is_array($validate_result)) {
-//                CLogger::log('AJAX add_to_cart - invalid validate_result', $validate_result_raw);
-//                wp_send_json_error(['message' => 'Invalid validate_result']);
-//            }
-//
-//            // ✅ Validation check (only success + sku required)
-//            if (!isset($validate_result['success'])
-//                || !$validate_result['success']
-//                || empty($validate_result['raw']['payload']['params']['items']['sku'])
-//            ) {
-//
-//
-//                CLogger::log('AJAX add_to_cart - validation failed, stopping', $validate_result);
-//
-//                CLogger::log('BINGO - SKU', $validate_result['raw']['payload']['params']['items']['sku']);
-//                CLogger::log('BINGO - Description', $validate_result['raw']['payload']['params']['items'][0]['description']);
-//                CLogger::log('BINGO - Description', $validate_result['raw']['payload']['params']['items'][0]['quantity']);
-//                CLogger::log('BINGO - Description', $validate_result['raw']['payload']['params']['userAccount']);
-//
-//                wp_send_json_error(['message' => 'Validation failed. Please try again.']);
-//            }
-//
-//            // Ensure required values exist
-//            if (!$product_id) {
-//                CLogger::log('AJAX add_to_cart - missing product_id');
-//                wp_send_json_error(['message' => 'Missing required data']);
-//            }
-//
-//            // Server object (optional)
-//            $server_id   = null;
-//            $server_name = null;
-//            if (is_array($server)) {
-//                $server_id   = sanitize_text_field($server['id'] ?? '');
-//                $server_name = sanitize_text_field($server['name'] ?? '');
-//            }
-//            CLogger::log('AJAX add_to_cart - server', $server);
-//
-//            CLogger::log('AJAX add_to_cart - decoded validate_result', $validate_result);
-//
-//            // Load product meta
-//            $xshop_json_raw = get_post_meta($product_id, 'xshop_json', true);
-//            $xshop_json = is_string($xshop_json_raw) ? json_decode($xshop_json_raw, true) : $xshop_json_raw;
-//            CLogger::log('AJAX add_to_cart - loaded xshop_json', $xshop_json);
-//
-//            // Prefer user account from validate_result
-//            $userAccountFromValidate = $validate_result['message']['userAccount'] ?? null;
-//
-//            // Fallback: resolve again from form_data
-//            $form_fields = [];
-//            if (!empty($_POST['form_data'])) {
-//                parse_str(wp_unslash($_POST['form_data']), $form_fields);
-//            }
-//            $resolved = self::resolve_wcpa_fields($product_id, $form_fields);
-//            CLogger::log('AJAX add_to_cart - resolved wcpa fields', $resolved);
-//
-//            // Build cart item data
-//            $cart_item_data = [
-//                'xshop_product'       => $xshop_json['product'] ?? [],
-//                'xshop_selected_sku'  => [
-//                    'sku'        => $sku,
-//                    'description'=> $validate_result['message']['sku']['description'] ?? '',
-//                    'price'      => $validate_result['message']['sku']['price']['amount'] ?? null,
-//                    'currency'   => $validate_result['message']['sku']['price']['currency'] ?? null,
-//                ],
-//                'xshop_validate'      => $validate_result,
-//                'xshop_userAccount'   => $userAccountFromValidate
-//                    ?? ($resolved['Account Number'] ?? $resolved['Account'] ?? $resolved['user_account'] ?? ''),
-//            ];
-//            CLogger::log('AJAX add_to_cart - cart_item_data', $cart_item_data);
-//
-//            // WooCommerce check
-//            if (!function_exists('WC')) {
-//                CLogger::log('AJAX add_to_cart - WooCommerce not available');
-//                wp_send_json_error(['message' => 'WooCommerce not available']);
-//            }
-//
-//            // Attempt to add to cart
-//            $added = WC()->cart->add_to_cart($product_id, 1, $variation_id ?: 0, [], $cart_item_data);
-//            CLogger::log('AJAX add_to_cart - add_to_cart result', $added);
-//
-//            if (!$added) {
-//                wp_send_json_error(['message' => 'Failed to add to cart']);
-//            }
-//
-//            // Success → redirect to check out
-//            wp_send_json_success(['redirect' => wc_get_checkout_url()]);
-//        } catch (Throwable $e) {
-//            CLogger::log('AJAX add_to_cart exception', [
-//                'message' => $e->getMessage(),
-//                'trace'   => $e->getTraceAsString(),
-//            ]);
-//            wp_send_json_error(['message' => 'Exception: ' . $e->getMessage()]);
-//        }
-//    }
-
-
-
     public static function handle_add_to_cart(): void
     {
         try {
@@ -529,6 +385,9 @@ class TopupAjax
             $quantity             = max(1, absint($_POST['quantity'] ?? 1));
             $validate_result_raw  = $_POST['validate_result'] ?? null;
             $server_post          = $_POST['server'] ?? null;
+            $role_id = isset($_POST['role_id']) ? sanitize_text_field($_POST['role_id']) : null;
+
+            CLogger::log('handle_add_to_cart()', $role_id);
 
             // Decode validate_result (can be JSON string or already array)
             $validate_result = is_string($validate_result_raw)
@@ -694,6 +553,7 @@ class TopupAjax
                 'xshop_json'          => $xshop_json_raw,
                 'xshop_validate'      => $validate_result,
                 'xshop_validate_id'   => $validate_id,
+                'xshop_role_id'   => $role_id,
                 'xshop_validate_orderId' => $validate_orderId,
                 'xshop_userAccount'   => $userAccount,
                 'xshop_resolved_fields'=> $form_fields, // helpful for debugging

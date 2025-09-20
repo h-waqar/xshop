@@ -101,6 +101,9 @@ class CartDataHandler
         if (isset($values['xshop_resolved_fields'])) {
             $item->add_meta_data('xshop_resolved_fields', $values['xshop_resolved_fields'], true);
         }
+        if (isset($values['xshop_role_id'])) {
+            $item->add_meta_data('xshop_role_id', $values['xshop_role_id'], true);
+        }
 
 
     }

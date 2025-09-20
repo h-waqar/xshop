@@ -18,22 +18,6 @@ class TopupHandler extends BaseHandler
         return 'topup';
     }
 
-//    public function build_payload(array $base, $xshop_json, $item, $order, $variation_product): array
-//    {
-//        $decoded     = $this->decode_json($xshop_json);
-//        $userAccount = $item->get_meta('xshop_userAccount', true);
-//
-//        // If we’re in an actual Woo order (has ID) → topup
-//        if ($order && $order->get_id()) {
-//            return $this->build_topup_payload($base, $decoded, $userAccount, (string) $order->get_id());
-//        }
-//
-//        // Otherwise (cart/validate flow) → validate
-//        return $this->build_validate_payload($base, $decoded, $userAccount);
-//    }
-
-
-
     public function build_payload(array $base, $xshop_json, $item, $order, $variation_product): array
     {
         $decoded     = $this->decode_json($xshop_json);
@@ -168,10 +152,10 @@ class TopupHandler extends BaseHandler
 
             case '2':
                 $ua = [
-                    'userId' => $userAccount ?? '',
+                    'userId' => $userAccount['userId'] ?? '',
                     'server' => [
-                        'id'   => $base['server_id'] ?? '',
-                        'name' => $base['server_name'] ?? '',
+                        'id'   => $userAccount['server']['id'] ?? '',
+//                        'name' => $base['server_name'] ?? '',
                     ],
                 ];
                 if (!empty($base['role_id'])) {
@@ -181,8 +165,9 @@ class TopupHandler extends BaseHandler
 
             case '3':
                 $ua = [
-                    'userId' => $userAccount ?? '',
-                    'zoneId' => $base['zone_id'] ?? '',
+                    'userId' => $userAccount['userId'] ?? '',
+                    'zoneId' => $userAccount['zoneId'] ?? '',
+//                    $userAccount ?? ''
                 ];
                 if (!empty($base['role_id'])) {
                     $ua['roleId'] = (string)$base['role_id'];
