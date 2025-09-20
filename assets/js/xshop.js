@@ -58,6 +58,7 @@ jQuery(function ($) {
                 const isTopup = ($btn.attr('data-xshop-type') === 'topup') || ($btn.data('xshopType') === 'topup');
 
                 if (isTopup) {
+                    console.log('Topup has been clicked', isTopup);
                     // block default submit and do our flow
                     e.preventDefault();
                     e.stopImmediatePropagation && e.stopImmediatePropagation();
@@ -216,9 +217,6 @@ jQuery(function ($) {
             const formData = $confirm.data('form-data') || '';
             const validateResult = $confirm.data('validate') || {};
             const roleId = $('select#xshopRole').length ? $('select#xshopRole').val() : null;
-
-            console.log("Role Id: ",roleId);
-
             // derive sku if present in validate result (message.sku might exist)
             let sku = '';
             if (validateResult && validateResult.message && validateResult.message.sku) {

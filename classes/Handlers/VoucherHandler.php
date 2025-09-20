@@ -19,6 +19,7 @@ class VoucherHandler extends BaseHandler
     public function build_payload(array $base, array $xshop_json, $item, $order, $variation_product): array
     {
         $decoded = $this->decode_json($xshop_json);
+        $currency = $base['sku_data']['currency'] ?? $decoded['product']['currency'] ?? 'USD';
 
         return [
             'jsonrpc' => '2.0',
@@ -27,10 +28,10 @@ class VoucherHandler extends BaseHandler
             'params'  => [
                 'items' => [[
                     'sku'      => $base['sku'],
-                    'quantity' => $base['quantity'],
+                    'quantity' => (int) $base['quantity'],
                     'price'    => [
-                        'amount'   => $base['price'],
-                        'currency' => $decoded['currency'] ?? 'USD',
+                        'amount'   => (float) $base['price'],
+                        'currency' => $currency,
                     ],
                 ]],
                 'customerId' => $order->get_billing_email(),

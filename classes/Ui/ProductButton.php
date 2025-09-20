@@ -15,11 +15,8 @@ class ProductButton
         global $product;
         if (! $product || ! $product->get_id()) return;
 
-        $xshop_json = get_post_meta($product->get_id(), 'xshop_json', true);
-        if (empty($xshop_json)) {
-            return;
-        }
-
+        $type = get_post_meta($product->get_id(), '_xshop_type', true);
+        if (($type ?? '') !== 'topup') return;
         // We output a tiny JS snippet that marks the button when DOM ready.
         // This avoids touching Woo templates and keeps things isolated.
         ?>

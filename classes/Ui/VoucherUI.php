@@ -26,7 +26,7 @@ class VoucherUI
         foreach ($vouchers as $item_id => $codes) {
             echo '<div class="voucher-item"><strong>' . esc_html__('Item', 'cubixsol') . " #{$item_id}</strong><ul>";
             foreach ((array) $codes as $code) {
-                echo '<li><code>' . esc_html($code) . '</code></li>';
+                echo '<li style="font-size: 1rem"><code>' . esc_html($code) . '</code></li>';
             }
             echo '</ul></div>';
         }

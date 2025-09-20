@@ -24,6 +24,7 @@ class Cubixsol_Woo_Order
         add_action('woocommerce_order_status_completed', [$this, 'cubixsol_place_woo_order']);
         add_action('woocommerce_order_status_processing', [$this, 'cubixsol_place_woo_order']);
 
+
         // --- Cart/checkout hooks ---
         add_filter('woocommerce_add_cart_item_data', [CartDataHandler::class, 'add_data_to_cart'], 10, 3);
         add_action('woocommerce_checkout_create_order_line_item', [CartDataHandler::class, 'append_item_meta'], 10, 4);
