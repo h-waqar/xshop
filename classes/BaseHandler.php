@@ -38,8 +38,7 @@ abstract class BaseHandler
 
     public function get_endpoint(): string
     {
-        return 'https://xshop-sandbox.codashop.com/v2';
-//        return 'https://xshop.codashop.com/v2';
+        return API_BASE_URL;
     }
 
     public function get_headers(): array

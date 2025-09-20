@@ -45,7 +45,6 @@ class VoucherHandler extends BaseHandler
         $decoded = $this->decode_json($xshop_json);
         $apiPath = ltrim($decoded['product']['apiPath'] ?? '', '/');
 
-        return "https://xshop-sandbox.codashop.com/v2/{$apiPath}";
-//        return "https://xshop.codashop.com/v2/{$apiPath}";
+        return API_BASE_URL . $apiPath;
     }
 }
