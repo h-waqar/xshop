@@ -13,7 +13,7 @@ class CLogger
     private static function init(): void
     {
         if (!isset(self::$logDir)) {
-            self::$logDir = PLUGIN_DIR_PATH . 'logs/';
+            self::$logDir = XSHOP_PLUGIN_DIR_PATH . 'logs/';
 
             if (!file_exists(self::$logDir)) {
                 wp_mkdir_p(self::$logDir);

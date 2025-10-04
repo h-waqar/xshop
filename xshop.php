@@ -1,20 +1,16 @@
 <?php /** @noinspection SpellCheckingInspection */
 
 /**
- * Plugin Name: ! xShop API
+ * Plugin Name: xShop API
  * Description: Integrate xShop API with WooCommerce
  * Version: 1.2.0
- * Author: CubixSol
- * Author URI: https://cubixsol.com
+ * Author: Pythonkw
+ * Author URI: https://Pythonkw.com
  * Text Domain: xshop-api
  */
 
 // Exit if accessed directly
 defined('ABSPATH') || exit;
-// ini_set('memory_limit', '-1');
-// ini_set('max_execution_time', '-1');
-// ini_set('display_errors', 1);
-
 // BASE URL
 
 $version = '1.0.0';
@@ -36,16 +32,16 @@ function cubixsol_define_constants($version)
     $plugin_url = plugin_dir_url($plugin_file);
 
     // Keep your existing constants
-    define('API_BASE_URL', 'https://xshop-sandbox.codashop.com/v2/');
-    //    define( 'API_BASE_URL', 'https://xshop.codashop.com/v2/' );
-    define('PLUGIN_FILE', $plugin_file);
-    define('VERSION', $version);
+//    define('API_BASE_URL', 'https://xshop-sandbox.codashop.com/v2/');
+        define( 'API_BASE_URL', 'https://xshop.codashop.com/v2/' );
+    define('XSHOP_PLUGIN_FILE', $plugin_file);
+    define('XSHOP_VERSION', $version);
 
     // Add extra useful constants
-    define('PLUGIN_BASENAME', plugin_basename($plugin_file));
-    define('PLUGIN_DIR_PATH', $plugin_dir);
-    define('PLUGIN_DIR_URL', $plugin_url);
-    define('PLUGIN_ASSETS_URL', trailingslashit($plugin_url . 'assets'));
+    define('XSHOP_PLUGIN_BASENAME', plugin_basename($plugin_file));
+    define('XSHOP_PLUGIN_DIR_PATH', $plugin_dir);
+    define('XSHOP_PLUGIN_DIR_URL', $plugin_url);
+    define('XSHOP_PLUGIN_ASSETS_URL', trailingslashit($plugin_url . 'assets'));
 
 
     // --- PSR-4 autoloader ---
@@ -57,7 +53,7 @@ function cubixsol_define_constants($version)
             $relative_class = str_replace('\\', DIRECTORY_SEPARATOR, $relative_class);
 
             // Full path
-            $file = PLUGIN_DIR_PATH . 'classes/' . $relative_class . '.php';
+            $file = XSHOP_PLUGIN_DIR_PATH . 'classes/' . $relative_class . '.php';
 
             if (file_exists($file)) {
                 require_once $file;
@@ -76,8 +72,8 @@ function cubixsol_init_hooks()
     /**
      * Activation/Deactivation
      */
-    register_activation_hook(PLUGIN_FILE, 'cubixsol_activation');
-    register_deactivation_hook(PLUGIN_FILE, 'cubixsol_deactivation');
+    register_activation_hook(XSHOP_PLUGIN_FILE, 'cubixsol_activation');
+    register_deactivation_hook(XSHOP_PLUGIN_FILE, 'cubixsol_deactivation');
 
     /**
      * Enqueue Admin/Front styles and scripts
@@ -92,6 +88,12 @@ function cubixsol_init_hooks()
     add_action('wp_ajax_xshop_sync_product', 'xshop_sync_product');
 
     /**
+     * Crob Job
+     */
+    add_action('products_schedule', 'xshop_sync_product');
+    add_filter('cron_schedules', 'cubixsol_cronjob_products_schedules');
+
+    /**
      * Metaboxes & save
      */
     add_action('admin_menu', 'cubixsol_admin_menu_page');
@@ -99,10 +101,28 @@ function cubixsol_init_hooks()
 
 function cubixsol_activation()
 {
+    if (!wp_next_scheduled('products_schedule')) {
+        wp_schedule_event(time(), 'products_hours', 'products_schedule');
+    }
 }
 
 function cubixsol_deactivation()
 {
+    wp_clear_scheduled_hook('products_schedule');
+}
+
+/**
+ *  Set cron job for produts schedule
+ */
+function cubixsol_cronjob_products_schedules($schedules)
+{
+    if (!isset($schedules["products_hours"])) {
+        $schedules["products_hours"] = array(
+            'interval' => 12 * 60 * 60,
+            'display' => __('Once every 12 Hours')
+        );
+    }
+    return $schedules;
 }
 
 /**
@@ -110,8 +130,8 @@ function cubixsol_deactivation()
  */
 function enqueue_admin_scripts()
 {
-    wp_enqueue_style('xshop', plugins_url('/assets/admin/css/xshop.css', PLUGIN_FILE), [], VERSION);
-    wp_enqueue_script('xshop', plugins_url('/assets/admin/js/xshop.js', PLUGIN_FILE), [], VERSION);
+    wp_enqueue_style('xshop', plugins_url('/assets/admin/css/xshop.css', XSHOP_PLUGIN_FILE), [], XSHOP_VERSION);
+    wp_enqueue_script('xshop', plugins_url('/assets/admin/js/xshop.js', XSHOP_PLUGIN_FILE), [], XSHOP_VERSION);
 }
 
 /**
@@ -119,24 +139,31 @@ function enqueue_admin_scripts()
  */
 function enqueue_front_scripts()
 {
-    wp_enqueue_style('xshop', plugins_url('/assets/css/xshop.css', PLUGIN_FILE), [], VERSION);
-    //    wp_enqueue_style('fontawesome', plugins_url('/assets/css/fontawesome.min.css', PLUGIN_FILE), [], VERSION);
+    wp_enqueue_style('xshop', plugins_url('/assets/css/xshop.css', XSHOP_PLUGIN_FILE), [], XSHOP_VERSION);
+    //    wp_enqueue_style('fontawesome', plugins_url('/assets/css/fontawesome.min.css', XSHOP_PLUGIN_FILE), [], XSHOP_VERSION);
     wp_enqueue_style(
         'fontawesome',
         'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css',
         []
     );
 
-    wp_enqueue_script('topup-ui', plugins_url('/assets/js/topup-ui.js', PLUGIN_FILE), ['jquery'], VERSION);
-//    wp_enqueue_script('xshop', plugins_url('/assets/js/xshop.js', PLUGIN_FILE), ['jquery'], filemtime(plugin_dir_path(PLUGIN_FILE) . 'assets/js/xshop.js'), true);
-    wp_enqueue_script('xshop', plugins_url('/assets/js/xshop.js', PLUGIN_FILE), ['jquery'], VERSION,true);
+    wp_enqueue_script('topup-ui', plugins_url('/assets/js/topup-ui.js', XSHOP_PLUGIN_FILE), ['jquery'], XSHOP_VERSION);
+//    wp_enqueue_script('xshop', plugins_url('/assets/js/xshop.js', XSHOP_PLUGIN_FILE), ['jquery'], filemtime(plugin_dir_path(XSHOP_PLUGIN_FILE) . 'assets/js/xshop.js'), true);
+    wp_enqueue_script('xshop', plugins_url('/assets/js/xshop.js', XSHOP_PLUGIN_FILE), ['jquery'], XSHOP_VERSION,true);
     wp_localize_script('xshop', 'xshopValidateConfig', ['ajax_url' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('xshop-validate'), 'checkout_url' => wc_get_checkout_url(),]);
 }
 
 
 function cubixsol_admin_menu_page()
 {
-    add_submenu_page('edit.php?post_type=product', 'API Settings', 'API Settings', 'manage_options', 'properties-settings', 'cubixsol_product_setting_page');
+    add_submenu_page(
+        'edit.php?post_type=product',
+        'API Settings',
+        'API Settings',
+        'manage_options',
+        'properties-settings',
+        'cubixsol_product_setting_page'
+    );
 }
 
 function cubixsol_product_setting_page()
@@ -363,9 +390,9 @@ function xshop_sync_product()
             continue;
         }
 
-        $supportedCountries = !empty($product['supportedCountries']) ? (array) $product['supportedCountries'] : [];
+        $supportedCountries = !empty($product['supportedCountries']) ? (array)$product['supportedCountries'] : [];
         $subtype = !empty($product['subtype']) ? $product['subtype'] : '';
-        $haveVerify = !empty($product['haveVerify']) ? (bool) $product['haveVerify'] : false;
+        $haveVerify = !empty($product['haveVerify']) ? (bool)$product['haveVerify'] : false;
 
         if (!$apiPath) {
             continue;
@@ -480,14 +507,17 @@ function xshop_sync_product()
 
         // create/update propert
 
-        //        if ($name == 'Steam Voucher')
-        cubixsol_update_product($post_id, $current_product_data);
+//        if ($name == 'AFK Journey') {
+            cubixsol_update_product($post_id, $current_product_data);
+//    }
 
     }
 }
 
 function cubixsol_update_product($post_id, $data)
 {
+
+//    echo"<pre>";print_r($data);echo"</pre>";exit("DSDSDSD");
     //    echo "<pre>";
 //    print_r($data);
 //    echo "</pre>";
@@ -535,30 +565,6 @@ function cubixsol_update_product($post_id, $data)
         update_post_meta($post_id, '_xshop_supportedCountries', $supported_countries);
         //        update_post_meta($post_id, '_xshop_servers', $data['servers']);
 
-
-        // variations
-        if (!empty($list_skus)) {
-            foreach ($list_skus as $variation) {
-                $name = $variation['description'] . " (" . $variation['description'] . " )";
-                $variation_name = $name ?? '';
-                if (!empty($variation_name)) {
-                    $returned = cubixsol_create_product_term("xShop", $variation_name, $post_id, 'yes');
-                    if (!empty($returned)) {
-                        $attributes_preserve = array_merge($attributes_preserve, $returned);
-                    }
-                }
-            }
-
-            if (!empty($attributes_preserve)) {
-                update_post_meta($post_id, '_product_attributes', $attributes_preserve);
-            }
-
-            sleep(5);
-            cubixsol_create_product_variation($list_skus, $post_id, $supported_countries);
-
-            $product = new WC_Product_Variable($post_id);
-            $product->save();
-        }
     } else {
         // Update existing product
         $existing_product = array('ID' => $post_id, 'post_title' => $product_name, );
@@ -568,13 +574,37 @@ function cubixsol_update_product($post_id, $data)
     update_post_meta($post_id, '_stock_status', 'instock');
     update_post_meta($post_id, '_stock', 50);
     update_post_meta($post_id, '_manage_stock', 'yes');
+
+    // variations
+    if (!empty($list_skus)) {
+        foreach ($list_skus as $variation) {
+            $name = $variation['description'] . " (" . $variation['origin'] . ")";
+            $variation_name = $name;
+            if (!empty($variation_name)) {
+                $returned = cubixsol_create_product_term("xShop", $variation_name, $post_id, 'yes');
+                if (!empty($returned)) {
+                    $attributes_preserve = array_merge($attributes_preserve, $returned);
+                }
+            }
+        }
+
+        if (!empty($attributes_preserve)) {
+            update_post_meta($post_id, '_product_attributes', $attributes_preserve);
+        }
+
+        sleep(5);
+        cubixsol_create_product_variation($list_skus, $post_id, $supported_countries);
+
+        $product = new WC_Product_Variable($post_id);
+        $product->save();
+    }
 }
 
 function cubixsol_create_product_variation($variations, $post_id, $supported_countries = [])
 {
     foreach ($variations as $variation) {
         $var_id = (!empty($variation['sku'])) ? $variation['sku'] : '';
-        $var_name = (!empty($variation['description'])) ? $variation['description'] : '';
+        $var_name = $variation['description'] . " (" . $variation['origin'] . ")";
         $product_price = (!empty($variation['price'])) ? $variation['price'] : '';
         $product_currency = (!empty($variation['currency'])) ? $variation['currency'] : '';
         $retailPrice = (!empty($variation['retailPrice'])) ? $variation['retailPrice'] : '';
@@ -770,44 +800,6 @@ add_action('wp_footer', function () {
 
     wp_die(); // stop before theme loads
 });
-
-//require_once PLUGIN_DIR_PATH . '/classes/Cubixsol_Woo_Order.php';
-//require_once PLUGIN_DIR_PATH . '/classes/Debug_Meta_Helper.php';
-//require_once PLUGIN_DIR_PATH . '/classes/OrderProcessor.php';
-//require_once PLUGIN_DIR_PATH . '/classes/Ui/ServerSelect.php';
-//require_once PLUGIN_DIR_PATH . '/classes/Ui/VoucherUI.php';
-//include_once PLUGIN_DIR_PATH . 'classes/Ui/Admin/WooOrderDetails.php';
-//
-//// Topup
-//require_once PLUGIN_DIR_PATH . '/classes/Ajax/TopupAjax.php';
-//require_once PLUGIN_DIR_PATH . '/classes/Ui/TopupUI.php';
-//require_once PLUGIN_DIR_PATH . '/classes/Handlers/TopupHandler.php';
-//include_once PLUGIN_DIR_PATH . 'classes/Ui/ProductButton.php';
-//
-//
-//use classes\ajax\TopupAjax;
-//use classes\Cubixsol_Woo_Order;
-//use classes\Debug_Meta_Helper;
-//use classes\ui\Admin\WooOrderDetails;
-//use classes\ui\ProductButton;
-//use classes\ui\ServerSelect;
-//use classes\ui\TopupUI;
-//use classes\ui\VoucherUI;
-//
-//
-//add_action('plugins_loaded', function () {
-//    new ServerSelect();
-//    Cubixsol_Woo_Order::instance();
-//    VoucherUI::init();
-//    // new Debug_Meta_Helper();
-//    WooOrderDetails::init();
-//
-//    // Topup
-//    TopupAjax::init();
-//    TopupUI::init();
-//    new ProductButton();
-//});
-
 
 class Xshop
 {

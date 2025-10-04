@@ -4,7 +4,7 @@ namespace classes\Ui;
 
 defined('ABSPATH') || exit;
 
-include_once PLUGIN_DIR_PATH . 'classes/OrderProcessor.php';
+include_once XSHOP_PLUGIN_DIR_PATH . 'classes/OrderProcessor.php';
 use classes\OrderProcessor;
 
 class VoucherUI

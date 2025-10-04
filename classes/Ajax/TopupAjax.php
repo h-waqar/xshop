@@ -6,9 +6,9 @@ namespace classes\Ajax;
 defined('ABSPATH') || exit;
 
 // Include required classes
-//include_once PLUGIN_DIR_PATH . 'classes/CLogger.php';
-//include_once PLUGIN_DIR_PATH . 'classes/Handlers/TopupHandler.php';
-//include_once PLUGIN_DIR_PATH . 'classes/XshopApiClient.php';
+//include_once XSHOP_PLUGIN_DIR_PATH . 'classes/CLogger.php';
+//include_once XSHOP_PLUGIN_DIR_PATH . 'classes/Handlers/TopupHandler.php';
+//include_once XSHOP_PLUGIN_DIR_PATH . 'classes/XshopApiClient.php';
 
 use classes\CLogger;
 use classes\Handlers\TopupHandler;

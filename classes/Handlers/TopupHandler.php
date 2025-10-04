@@ -5,8 +5,8 @@ namespace classes\Handlers;
 
 defined('ABSPATH') || exit;
 
-//include_once PLUGIN_DIR_PATH . 'classes/BaseHandler.php';
-//include_once PLUGIN_DIR_PATH . 'classes/CLogger.php';
+//include_once XSHOP_PLUGIN_DIR_PATH . 'classes/BaseHandler.php';
+//include_once XSHOP_PLUGIN_DIR_PATH . 'classes/CLogger.php';
 
 use classes\BaseHandler;
 use classes\CLogger;

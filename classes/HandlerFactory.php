@@ -6,8 +6,8 @@ namespace classes;
 
 defined('ABSPATH') || exit;
 
-//include_once PLUGIN_DIR_PATH . 'classes/Handlers/TopupHandler.php';
-//include_once PLUGIN_DIR_PATH . 'classes/Handlers/VoucherHandler.php';
+//include_once XSHOP_PLUGIN_DIR_PATH . 'classes/Handlers/TopupHandler.php';
+//include_once XSHOP_PLUGIN_DIR_PATH . 'classes/Handlers/VoucherHandler.php';
 
 
 use classes\Handlers\TopupHandler;

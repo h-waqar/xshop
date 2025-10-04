@@ -5,7 +5,7 @@ namespace classes;
 
 defined('ABSPATH') || exit;
 
-//include_once PLUGIN_DIR_PATH . 'classes/CLogger.php';
+//include_once XSHOP_PLUGIN_DIR_PATH . 'classes/CLogger.php';
 
 class CartDataHandler
 {
